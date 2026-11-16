@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f5f4a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="المصحف">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>المصحف الشريف</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -108,6 +116,15 @@
   @media (min-width:900px){#reader.zoomed .stage img{width:min(90%,1441px)}}
   #reader.zoomed .navzone{display:none}
   #zoomBtn{font-size:19px}
+  .offline{margin:6px auto 4px;max-width:520px;text-align:center}
+  .offline .extras{margin-top:0}
+  .offline .chip{font-size:14.5px;padding:10px 16px}
+  .offline .chip.done{background:var(--accent-soft);color:var(--accent);border-color:transparent;cursor:default}
+  .offline .chip.install{background:var(--accent);color:#fff;border-color:transparent}
+  .prog{margin-top:10px}
+  .prog .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+  .prog .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+  .prog small,.offline .note{display:block;color:var(--muted);font-size:13px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -116,6 +133,14 @@
   <div class="brand">
     <h1>المصحف الشريف</h1>
     <p>اختر سورة أو جزءًا لفتح صفحته</p>
+  </div>
+  <div class="offline hidden" id="offline">
+    <div class="extras">
+      <button class="chip install hidden" id="installBtn">📲 ثبّت التطبيق على الجهاز</button>
+      <button class="chip" id="dlBtn">⬇ احفظ المصحف للقراءة بدون إنترنت</button>
+    </div>
+    <div class="prog hidden" id="dlProg"><div class="bar"><i id="dlBar"></i></div><small id="dlTxt"></small></div>
+    <small class="note hidden" id="iosNote">للتثبيت على الآيفون: من Safari دوس زرار المشاركة ثم «إضافة إلى الشاشة الرئيسية»</small>
   </div>
   <button class="continue hidden" id="continueBtn">
     <span><small>متابعة القراءة</small><b id="continueLabel"></b></span>
@@ -504,6 +529,62 @@ function route(){
 }
 window.addEventListener("hashchange", route);
 render(); route();
+
+/* ---------- PWA: التثبيت والقراءة بدون إنترنت ---------- */
+(function(){
+  if(!("serviceWorker" in navigator) || !("caches" in window)) return;
+  const PAGES_CACHE = "mushaf-pages-v1", NB = Math.ceil(TOTAL/PER);
+  const box = document.getElementById("offline"), dlBtn = document.getElementById("dlBtn");
+  const prog = document.getElementById("dlProg"), bar = document.getElementById("dlBar"), txt = document.getElementById("dlTxt");
+  const installBtn = document.getElementById("installBtn"), iosNote = document.getElementById("iosNote");
+  const urlOf = k => new URL(`b/${k}.webp`, location.href).href;
+  let busy = false;
+
+  async function saved(){
+    const c = await caches.open(PAGES_CACHE); let n = 0;
+    for(let k=0;k<NB;k++) if(await c.match(urlOf(k))) n++;
+    return n;
+  }
+  async function refresh(){
+    if(busy) return;
+    const n = await saved();
+    if(n>=NB){ dlBtn.textContent = "✓ المصحف محفوظ على الجهاز — يفتح بدون إنترنت"; dlBtn.classList.add("done"); dlBtn.disabled = true; }
+    else if(n>0){ dlBtn.textContent = `⬇ كمّل حفظ المصحف (${ar(Math.round(n/NB*100))}٪ محفوظ)`; }
+  }
+  async function download(){
+    if(busy) return; busy = true; dlBtn.disabled = true;
+    try{ if(navigator.storage && navigator.storage.persist) await navigator.storage.persist(); }catch(e){}
+    const c = await caches.open(PAGES_CACHE);
+    prog.classList.remove("hidden");
+    let done = 0, failed = 0, next = 0;
+    const show = () => { bar.style.width = (done/NB*100)+"%"; txt.textContent = `جارٍ الحفظ… ${ar(done)} من ${ar(NB)}`; };
+    show();
+    async function worker(){
+      while(next < NB){
+        const k = next++, u = urlOf(k);
+        try{
+          if(!(await c.match(u))){ const r = await fetch(u, {cache:"no-store"}); if(!r.ok) throw 0; await c.put(u, r); }
+        }catch(e){ failed++; }
+        done++; show();
+      }
+    }
+    await Promise.all([worker(),worker(),worker(),worker()]);
+    busy = false; dlBtn.disabled = false;
+    if(failed){ txt.textContent = `اتحفظ ${ar(NB-failed)} من ${ar(NB)} — اتأكد من النت ودوس تاني عشان تكمّل`; }
+    else { prog.classList.add("hidden"); }
+    refresh();
+  }
+  dlBtn.addEventListener("click", download);
+
+  let deferred = null;
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; installBtn.classList.remove("hidden"); });
+  installBtn.addEventListener("click", async () => { if(!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; installBtn.classList.add("hidden"); });
+  window.addEventListener("appinstalled", () => installBtn.classList.add("hidden"));
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if(/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) iosNote.classList.remove("hidden");
+
+  navigator.serviceWorker.register("sw.js").then(() => { box.classList.remove("hidden"); refresh(); }).catch(()=>{});
+})();
 </script>
 </body>
 </html>
