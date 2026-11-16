@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>المصحف الشريف</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f1e7; --card:#fffdf8; --ink:#2a2418; --muted:#7b705c; --line:#e6dccb;
+    --accent:#1f5f4a; --accent-soft:#e3eee8; --gold:#b08a3e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Tajawal",system-ui,sans-serif}
+  button,input{font:inherit;color:inherit}
+  .hidden{display:none!important}
+
+  /* ---------- Home ---------- */
+  #home{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+  .brand{text-align:center;padding:18px 0 8px}
+  .brand h1{font-family:"Amiri",serif;font-size:40px;margin:0;color:var(--accent);font-weight:700}
+  .brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  .continue{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--accent);color:#fff;border:0;border-radius:14px;padding:14px 18px;width:100%;
+    margin:16px 0 8px;cursor:pointer;text-align:right}
+  .continue small{display:block;opacity:.85;font-size:13px}
+  .continue b{font-size:17px}
+  .continue .arrow{font-size:22px}
+  .controls{position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:2}
+  .tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+  .hizbcard{padding:10px 12px 12px}
+  .tabs button small{display:inline-grid;place-items:center;min-width:2em;height:2em;padding:0 .35em;margin-inline-start:12px;border-radius:999px;
+    background:#f1ebe0;color:var(--ink);font-size:.85em;font-weight:700;line-height:1;vertical-align:middle}
+  .tabs button[aria-selected="true"] small{background:#c8ddd1;color:var(--accent)}
+  .tabs button{min-width:0}
+  @media (max-width:520px){
+    .tabs button{font-size:clamp(12px,3.5vw,15px)!important;padding:8px 2px!important;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.2}
+    .tabs button small{margin-inline-start:0;font-size:.8em;min-width:1.9em;height:1.7em}
+  }
+  .rg{grid-column:span 2;min-width:0;border:1px solid var(--line);border-radius:12px;padding:6px;background:#faf6ee}
+  .rglabel{font-size:12.5px;font-weight:700;color:var(--gold);text-align:center;margin-bottom:5px}
+  .rgcells{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+  .hizbpair{display:flex;gap:8px;padding:0 12px 12px}
+  .hizb{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 10px;cursor:pointer;text-align:center;line-height:1.35}
+  .hizb:hover{border-color:var(--gold)}
+  .hizb span{display:block;font-weight:700;color:var(--accent);font-size:15px}
+  .hizb small{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hlabel small{color:var(--muted);font-weight:400;font-size:13px}
+  .tabs button{flex:1;border:0;background:transparent;padding:10px 4px;white-space:nowrap;border-radius:9px;cursor:pointer;font-weight:500;font-size:16px;color:var(--muted)}
+  .tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);font-weight:700}
+  .search{margin-top:10px;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:16px;outline:none}
+  .search:focus{border-color:var(--accent)}
+  .list{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:1fr;gap:8px}
+  @media (min-width:640px){.list{grid-template-columns:1fr 1fr}}
+  .item{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:10px 14px;cursor:pointer;text-align:right}
+  .item:hover{border-color:var(--gold)}
+  .num{flex:none;width:38px;height:38px;display:grid;place-items:center;border-radius:50%;
+    background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:14px}
+  .item .name{flex:1;min-width:0}
+  .item .name b{display:block;font-family:"Amiri",serif;font-size:21px;font-weight:700;line-height:1.3}
+  .item .name small{color:var(--muted);font-size:13px}
+  .item .pg{flex:none;color:var(--muted);font-size:13px;text-align:left}
+  .item .pg b{display:block;color:var(--ink);font-size:16px}
+  .juzcard{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .juzcard .item{border:0;border-radius:0}
+  .hizbs{display:flex;flex-direction:column;gap:10px;padding:0 12px 12px}
+  .hlabel{font-weight:700;color:var(--gold);font-size:14px;margin:0 2px 6px}
+  .rubs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .rub{min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:7px 2px;cursor:pointer;text-align:center;line-height:1.3}
+  .rub:hover{border-color:var(--gold)}
+  .rub span{display:block;font-weight:700;color:var(--accent);font-size:clamp(11px,3.2vw,13.5px);white-space:nowrap}
+  .rub small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .empty{color:var(--muted);text-align:center;padding:30px 0}
+  .extras{display:flex;gap:8px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px}
+
+  /* ---------- Reader ---------- */
+  #reader{position:fixed;inset:0;background:#efe8da;display:flex;flex-direction:column}
+  .bar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,253,248,.96);
+    border-bottom:1px solid var(--line);transition:transform .2s, opacity .2s;z-index:3}
+  .bar.bottom{border-bottom:0;border-top:1px solid var(--line);justify-content:center}
+  .iconbtn{border:0;background:transparent;width:42px;height:42px;border-radius:10px;cursor:pointer;font-size:22px;display:grid;place-items:center}
+  .iconbtn:hover{background:var(--accent-soft)}
+  .iconbtn:disabled{opacity:.3;cursor:default;background:transparent}
+  .title{flex:1;min-width:0;text-align:center;line-height:1.2}
+  .title b{font-family:"Amiri",serif;font-size:21px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .title small{color:var(--muted);font-size:13px}
+  .stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:pan-y pinch-zoom;position:relative}
+  .stage img{max-width:100%;max-height:100%;height:auto;display:block;user-select:none;-webkit-user-drag:none;
+    box-shadow:0 2px 14px rgba(0,0,0,.12);background:#fffdf5}
+  .stage .loading{position:absolute;color:var(--muted)}
+  .stage img.pending{visibility:hidden}
+  .pagehit{grid-column:1/-1}
+  .pagehit .item{border-color:var(--gold);background:#fffaf0}
+  .goto{display:flex;align-items:center;gap:6px;margin:0 6px}
+  .goto input{width:76px;text-align:center;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:16px}
+  .goto span{color:var(--muted);font-size:14px}
+  #reader.immersive .bar.top{transform:translateY(-100%);opacity:0;position:absolute;left:0;right:0;top:0}
+  #reader.immersive .bar.bottom{transform:translateY(100%);opacity:0;position:absolute;left:0;right:0;bottom:0}
+  .navzone{position:absolute;top:0;bottom:0;width:22%;z-index:2;cursor:pointer}
+  .navzone.left{left:0}.navzone.right{right:0}
+  @media (hover:none){.navzone{display:none}}
+  #reader.zoomed .stage{display:block;overflow:auto;touch-action:pan-x pan-y pinch-zoom}
+  #reader.zoomed .stage img{max-width:none;max-height:none;width:min(100%,1441px);margin:0 auto}
+  @media (min-width:900px){#reader.zoomed .stage img{width:min(90%,1441px)}}
+  #reader.zoomed .navzone{display:none}
+  #zoomBtn{font-size:19px}
+</style>
+</head>
+<body>
+
+<main id="home">
+  <div class="brand">
+    <h1>المصحف الشريف</h1>
+    <p>اختر سورة أو جزءًا لفتح صفحته</p>
+  </div>
+  <button class="continue hidden" id="continueBtn">
+    <span><small>متابعة القراءة</small><b id="continueLabel"></b></span>
+    <span class="arrow">←</span>
+  </button>
+  <div class="controls">
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="surahs">السور<small>١١٤</small></button>
+      <button role="tab" aria-selected="false" data-tab="juz">الأجزاء<small>٣٠</small></button>
+      <button role="tab" aria-selected="false" data-tab="hizb">الأحزاب<small>٦٠</small></button>
+      <button role="tab" aria-selected="false" data-tab="rub">الأرباع<small>٢٤٠</small></button>
+      <button role="tab" aria-selected="false" data-tab="thumun">الأثمان<small>٤٨٠</small></button>
+    </div>
+    <input class="search" id="search" type="search" placeholder="ابحث باسم السورة أو رقمها…" autocomplete="off">
+  </div>
+  <ul class="list" id="list"></ul>
+  <div class="extras">
+    <button class="chip" data-page="605">دعاء ختم القرآن</button>
+    <button class="chip" data-page="607">فهرس السور</button>
+  </div>
+</main>
+
+<section id="reader" class="hidden" aria-label="قارئ المصحف">
+  <div class="bar top">
+    <button class="iconbtn" id="backBtn" title="رجوع للفهرس" aria-label="رجوع للفهرس">→</button>
+    <div class="title"><b id="rSurah"></b><small id="rMeta"></small></div>
+    <button class="iconbtn" id="zoomBtn" title="تكبير" aria-label="تكبير الصفحة">🔍</button>
+  </div>
+  <div class="stage" id="stage">
+    <span class="loading" id="loading">جارٍ التحميل…</span>
+    <img id="pageImg" alt="">
+    <div class="navzone left" id="zoneLeft" title="الصفحة التالية"></div>
+    <div class="navzone right" id="zoneRight" title="الصفحة السابقة"></div>
+  </div>
+  <div class="bar bottom">
+    <button class="iconbtn" id="prevBtn" title="الصفحة السابقة" aria-label="الصفحة السابقة"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    <form class="goto" id="gotoForm">
+      <span>صفحة</span><input id="gotoInput" type="number" inputmode="numeric" min="1" max="608"><span id="totalLbl"></span>
+    </form>
+    <button class="iconbtn" id="nextBtn" title="الصفحة التالية" aria-label="الصفحة التالية"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+  </div>
+</section>
+
+<script>
+const TOTAL = 608;          // كل صفحات الملف (604 صفحة مصحف + الدعاء + الفهرس)
+const QURAN_PAGES = 604;
+
+// [اسم السورة، صفحة البداية]  — من فهرس المصحف نفسه
+const SURAHS = [
+["الفاتحة",1],["البقرة",2],["آل عمران",50],["النساء",77],["المائدة",106],["الأنعام",128],["الأعراف",151],["الأنفال",177],["التوبة",187],["يونس",208],
+["هود",221],["يوسف",235],["الرعد",249],["إبراهيم",255],["الحجر",262],["النحل",267],["الإسراء",282],["الكهف",293],["مريم",305],["طه",312],
+["الأنبياء",322],["الحج",332],["المؤمنون",342],["النور",350],["الفرقان",359],["الشعراء",367],["النمل",377],["القصص",385],["العنكبوت",396],["الروم",404],
+["لقمان",411],["السجدة",415],["الأحزاب",418],["سبأ",428],["فاطر",434],["يس",440],["الصافات",446],["ص",453],["الزمر",458],["غافر",467],
+["فصلت",477],["الشورى",483],["الزخرف",489],["الدخان",496],["الجاثية",499],["الأحقاف",502],["محمد",507],["الفتح",511],["الحجرات",515],["ق",518],
+["الذاريات",520],["الطور",523],["النجم",526],["القمر",528],["الرحمن",531],["الواقعة",534],["الحديد",537],["المجادلة",542],["الحشر",545],["الممتحنة",549],
+["الصف",551],["الجمعة",553],["المنافقون",554],["التغابن",556],["الطلاق",558],["التحريم",560],["الملك",562],["القلم",564],["الحاقة",566],["المعارج",568],
+["نوح",570],["الجن",572],["المزمل",574],["المدثر",575],["القيامة",577],["الإنسان",578],["المرسلات",580],["النبأ",582],["النازعات",583],["عبس",585],
+["التكوير",586],["الانفطار",587],["المطففين",587],["الانشقاق",589],["البروج",590],["الطارق",591],["الأعلى",591],["الغاشية",592],["الفجر",593],["البلد",594],
+["الشمس",595],["الليل",595],["الضحى",596],["الشرح",596],["التين",597],["العلق",597],["القدر",598],["البينة",598],["الزلزلة",599],["العاديات",599],
+["القارعة",600],["التكاثر",600],["العصر",601],["الهمزة",601],["الفيل",601],["قريش",602],["الماعون",602],["الكوثر",602],["الكافرون",603],["النصر",603],
+["المسد",603],["الإخلاص",604],["الفلق",604],["الناس",604]
+];
+
+// بداية كل ربع حزب: [الصفحة، رقم السورة، رقم الآية] — ٢٤٠ ربعًا (٤ أرباع في كل حزب، حزبان في كل جزء)
+const RUBS = [
+[1,1,1],[5,2,26],[7,2,44],[9,2,60],[11,2,75],[14,2,92],[17,2,106],[19,2,124],
+[22,2,142],[24,2,158],[27,2,177],[29,2,189],[32,2,203],[34,2,219],[37,2,233],[39,2,243],
+[42,2,253],[44,2,263],[46,2,272],[49,2,283],[51,3,15],[54,3,33],[56,3,52],[59,3,75],
+[62,3,93],[64,3,113],[67,3,133],[69,3,153],[72,3,171],[74,3,186],[77,4,1],[79,4,12],
+[82,4,24],[84,4,36],[87,4,58],[89,4,74],[92,4,88],[94,4,100],[97,4,114],[100,4,135],
+[102,4,148],[104,4,163],[106,5,1],[109,5,12],[112,5,27],[114,5,41],[117,5,51],[119,5,67],
+[121,5,82],[124,5,97],[126,5,109],[129,6,13],[132,6,36],[134,6,59],[137,6,74],[140,6,95],
+[142,6,111],[144,6,127],[146,6,141],[148,6,151],[151,7,1],[154,7,31],[156,7,47],[158,7,65],
+[162,7,88],[164,7,117],[167,7,142],[170,7,156],[173,7,171],[175,7,189],[177,8,1],[179,8,22],
+[182,8,41],[184,8,61],[187,9,1],[189,9,19],[192,9,34],[194,9,46],[196,9,60],[199,9,75],
+[201,9,93],[204,9,111],[206,9,122],[209,10,11],[212,10,26],[214,10,53],[217,10,71],[219,10,90],
+[222,11,6],[224,11,24],[226,11,41],[228,11,61],[231,11,84],[233,11,108],[236,12,7],[238,12,30],
+[242,12,53],[244,12,77],[247,12,101],[249,13,5],[252,13,19],[254,13,35],[256,14,10],[259,14,28],
+[262,15,1],[264,15,49],[267,16,1],[270,16,30],[272,16,51],[275,16,75],[277,16,90],[280,16,111],
+[282,17,1],[284,17,23],[287,17,50],[289,17,70],[292,17,99],[295,18,17],[297,18,32],[299,18,51],
+[302,18,75],[304,18,99],[306,19,22],[309,19,59],[312,20,1],[315,20,55],[317,20,83],[319,20,111],
+[322,21,1],[324,21,29],[326,21,51],[329,21,83],[332,22,1],[334,22,19],[336,22,38],[339,22,60],
+[342,23,1],[344,23,36],[347,23,75],[350,24,1],[352,24,21],[354,24,35],[356,24,53],[359,25,1],
+[362,25,21],[364,25,53],[367,26,1],[369,26,52],[371,26,111],[374,26,181],[377,27,1],[379,27,27],
+[382,27,56],[384,27,82],[386,28,12],[389,28,29],[392,28,51],[394,28,76],[396,29,1],[399,29,26],
+[402,29,46],[404,30,1],[407,30,31],[410,30,54],[413,31,22],[415,32,11],[418,33,1],[420,33,18],
+[422,33,31],[425,33,51],[426,33,60],[429,34,10],[431,34,24],[433,34,46],[436,35,15],[439,35,41],
+[442,36,28],[444,36,60],[446,37,22],[449,37,83],[451,37,145],[454,38,21],[456,38,52],[459,39,8],
+[462,39,32],[464,39,53],[467,40,1],[469,40,21],[472,40,41],[474,40,66],[477,41,9],[479,41,25],
+[482,41,47],[484,42,13],[486,42,27],[488,42,51],[491,43,24],[493,43,57],[496,44,17],[499,45,12],
+[502,46,1],[505,46,21],[507,47,10],[510,47,33],[513,48,18],[515,49,1],[517,49,14],[519,50,27],
+[522,51,31],[524,52,24],[526,53,26],[529,54,9],[531,55,1],[534,56,1],[536,56,75],[539,57,16],
+[542,58,1],[544,58,14],[547,59,11],[550,60,7],[553,62,1],[554,63,4],[558,65,1],[560,66,1],
+[562,67,1],[564,68,1],[566,69,1],[569,70,19],[572,72,1],[575,73,20],[577,75,1],[579,76,19],
+[582,78,1],[585,80,1],[587,82,1],[589,84,1],[591,87,1],[594,90,1],[596,94,1],[599,100,9]
+];
+const HIZB_PAGES = RUBS.filter((_,i)=>i%4===0).map(r=>r[0]);
+const RUB_SHORT = ["الربع الأول","الربع الثاني","الربع الثالث","الربع الرابع"];
+const RUB_NAMES = RUB_SHORT.map(s=>s+" من الحزب");
+// بداية كل ثمن (الثمن الثاني من كل ربع): [الصفحة، السورة، الآية، 1 لو بيبدأ من وسط الآية] — مأخوذة من علامات المصحف نفسه
+const THUMUNS = [
+[4,2,17],[6,2,34],[8,2,54],[10,2,67],[13,2,85],[15,2,101],[18,2,114],[20,2,132],
+[23,2,148],[25,2,166],[28,2,184],[30,2,196,1],[33,2,213],[36,2,226],[38,2,236],[40,2,248],
+[43,2,258],[45,2,267],[48,2,282],[50,3,7,1],[53,3,26],[55,3,42],[58,3,64],[60,3,83],
+[63,3,103],[65,3,121],[68,3,144],[71,3,161],[73,3,179],[76,3,195],[78,4,7],[80,4,18],
+[83,4,31],[86,4,46],[88,4,65],[90,4,79],[93,4,93],[95,4,105],[98,4,124],[101,4,141],
+[103,4,157],[105,4,172],[108,5,6],[111,5,18],[113,5,33],[115,5,45],[118,5,59],[120,5,75],
+[123,5,90],[125,5,105],[128,6,1],[130,6,26],[133,6,48],[135,6,68],[138,6,87],[140,6,101],
+[143,6,120],[145,6,136],[147,6,145],[150,6,158],[152,7,19],[155,7,39],[157,7,55],[160,7,75],
+[163,7,100],[166,7,132],[168,7,149],[171,7,163],[174,7,180],[176,7,199],[178,8,12],[180,8,32],
+[183,8,48],[186,8,70],[188,9,9],[191,9,28],[193,9,40],[195,9,54],[198,9,70],[200,9,84],
+[203,9,101],[205,9,117],[208,10,4],[211,10,22],[213,10,40],[216,10,62],[218,10,83],[220,10,104],
+[223,11,14],[225,11,32],[227,11,50],[230,11,73],[232,11,94],[235,11,120],[237,12,20],[240,12,41],
+[243,12,65],[246,12,88],[248,12,111],[251,13,14],[253,13,30],[255,14,1],[258,14,21],[260,14,39],
+[263,15,26],[266,15,80],[268,16,13],[271,16,37],[273,16,64],[276,16,81],[278,16,101],[281,16,120],
+[283,17,11],[285,17,36],[288,17,59],[291,17,88],[293,18,1],[296,18,22,1],[298,18,45],[300,18,60],
+[302,18,83],[305,19,7],[308,19,46],[311,19,77],[313,20,36],[316,20,72],[318,20,97],[321,20,126],
+[323,21,15],[325,21,42],[327,21,69],[330,21,97],[333,22,11],[335,22,30],[338,22,49],[340,22,71],
+[343,23,20],[345,23,51],[348,23,93],[351,24,11],[353,24,31],[355,24,43],[358,24,60],[360,25,10],
+[363,25,38],[365,25,67],[368,26,34],[370,26,78],[373,26,146],[375,26,205],[378,27,16],[380,27,41],
+[383,27,67],[385,28,1],[388,28,22],[390,28,39],[393,28,63],[395,28,81],[398,29,17],[400,29,38],
+[403,29,60],[406,30,23],[409,30,46],[412,31,12],[414,31,33],[416,32,20],[419,33,9],[421,33,25],
+[423,33,38],[425,33,54],[428,34,1],[430,34,17],[432,34,34],[435,35,8],[438,35,31],[441,36,13],
+[443,36,47],[445,36,78],[447,37,48],[450,37,114],[453,38,1],[455,38,30],[458,38,84],[461,39,22],
+[463,39,45],[465,39,67],[468,40,11],[470,40,30],[473,40,53],[476,40,79],[478,41,17],[480,41,37],
+[483,42,5],[485,42,19],[487,42,43],[490,43,12],[492,43,43],[495,43,86],[498,44,51],[501,45,23],
+[504,46,15],[506,46,33],[509,47,20],[511,48,8],[514,48,26],[516,49,9],[518,50,9],[520,51,1],
+[523,52,1],[526,53,1],[527,53,43],[530,54,34],[533,55,41],[535,56,39],[538,57,8],[540,57,22],
+[543,58,8],[546,59,5],[548,59,21],[551,61,1],[554,62,9],[556,64,7],[559,65,6],[561,66,8],
+[563,67,16],[565,68,34],[567,69,25],[571,71,11],[573,72,18],[576,74,31],[578,76,1],[580,77,16],
+[583,79,1],[586,81,1],[588,83,7],[590,85,12],[593,89,1],[595,92,1],[598,98,1],[602,107,1]
+];
+const TH_SHORT = [1,2,3,4,5,6,7,8].map(n=>"الثمن "+"٠١٢٣٤٥٦٧٨٩"[n]);
+const eighth = (h,k) => k%2 ? THUMUNS[(h-1)*4+(k>>1)] : RUBS[(h-1)*4+(k>>1)];
+const JUZ_PAGES = [1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+const ORDINALS = ["الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر",
+"الحادي عشر","الثاني عشر","الثالث عشر","الرابع عشر","الخامس عشر","السادس عشر","السابع عشر","الثامن عشر","التاسع عشر","العشرون",
+"الحادي والعشرون","الثاني والعشرون","الثالث والعشرون","الرابع والعشرون","الخامس والعشرون","السادس والعشرون","السابع والعشرون","الثامن والعشرون","التاسع والعشرون","الثلاثون"];
+
+const ar = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+const norm = s => s.replace(/[ً-ٰٟـ]/g,"").replace(/[أإآٱ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).trim();
+
+function surahAt(p){ let s=0; for(let i=0;i<SURAHS.length;i++){ if(SURAHS[i][1]<=p) s=i; else break; } return s; }
+function hizbAt(p){ let j=0; for(let i=0;i<HIZB_PAGES.length;i++){ if(HIZB_PAGES[i]<=p) j=i; else break; } return j; }
+function rubAt(p){ let j=0; for(let i=0;i<RUBS.length;i++){ if(RUBS[i][0]<=p) j=i; else break; } return j; }
+function juzAt(p){ let j=0; for(let i=0;i<JUZ_PAGES.length;i++){ if(JUZ_PAGES[i]<=p) j=i; else break; } return j; }
+
+/* ---------- storage (اختياري) ---------- */
+const store = {
+  get(){ try{ return parseInt(localStorage.getItem("mushaf:last"),10)||0; }catch(e){ return 0; } },
+  set(p){ try{ localStorage.setItem("mushaf:last", String(p)); }catch(e){} }
+};
+
+/* ---------- Home ---------- */
+const listEl = document.getElementById("list");
+const searchEl = document.getElementById("search");
+let tab = "surahs";
+
+const item = (n,title,sub,page) => `<li><button class="item" data-page="${page}">
+  <span class="num">${ar(n)}</span>
+  <span class="name"><b>${title}</b><small>${sub}</small></span>
+  <span class="pg">صفحة<b>${ar(page)}</b></span></button></li>`;
+const PLACEHOLDERS = {surahs:"ابحث باسم السورة أو رقمها…", juz:"ابحث برقم الجزء أو اسم السورة…", hizb:"ابحث برقم الجزء أو الحزب أو اسم السورة…", rub:"ابحث برقم الجزء أو الحزب أو اسم السورة…", thumun:"ابحث برقم الجزء أو الحزب أو اسم السورة…"};
+Object.assign(PLACEHOLDERS,{surahs:"ابحث بالسورة أو رقمها أو رقم الصفحة…", juz:"ابحث برقم الجزء أو السورة أو الصفحة…",
+  hizb:"ابحث برقم الحزب أو السورة أو الصفحة…", rub:"ابحث برقم الحزب أو السورة أو الصفحة…", thumun:"ابحث برقم الحزب أو السورة أو الصفحة…"});
+searchEl.placeholder = PLACEHOLDERS[tab];
+function pageHit(q){
+  const m = q.match(/^(?:صفحه|ص)?\s*(\d{1,3})$/);
+  if(!m) return "";
+  const p = parseInt(m[1],10);
+  if(p<1 || p>TOTAL) return "";
+  const sub = p<=QURAN_PAGES
+    ? `سورة ${SURAHS[surahAt(p)][0]} · الجزء ${ORDINALS[juzAt(p)]} · الحزب ${ar(hizbAt(p)+1)}`
+    : (p<=606 ? "دعاء ختم القرآن" : "فهرس السور");
+  return `<li class="pagehit"><button class="item" data-page="${p}">
+    <span class="num">ص</span>
+    <span class="name"><b>صفحة ${ar(p)}</b><small>${sub}</small></span>
+    <span class="pg">افتح<b>←</b></span></button></li>`;
+}
+function render(){
+  const q = norm(searchEl.value);
+  let rows = [];
+  const hit = q ? pageHit(q) : "";
+  if(hit) rows.push(hit);
+  if(tab==="surahs"){
+    SURAHS.forEach(([name,page],i)=>{
+      if(q && !norm(name).includes(q) && String(i+1)!==q) return;
+      rows.push(`<li><button class="item" data-page="${page}">
+        <span class="num">${ar(i+1)}</span>
+        <span class="name"><b>${name}</b><small>الجزء ${ORDINALS[juzAt(page)]}</small></span>
+        <span class="pg">صفحة<b>${ar(page)}</b></span></button></li>`);
+    });
+  } else if(tab==="juz"){
+    JUZ_PAGES.forEach((page,i)=>{
+      const label = "الجزء " + ORDINALS[i];
+      const [,s,a] = RUBS[i*8];
+      if(q && !norm(label).includes(q) && String(i+1)!==q && !norm(SURAHS[s-1][0]).includes(q)) return;
+      rows.push(item(i+1, label, `يبدأ من ${SURAHS[s-1][0]} آية ${ar(a)}`, page));
+    });
+  } else if(tab==="hizb"){
+    JUZ_PAGES.forEach((page,i)=>{
+      const label = "الجزء " + ORDINALS[i];
+      const h1 = 2*i+1, h2 = 2*i+2;
+      const names = [RUBS[i*8], RUBS[i*8+4]].map(r=>SURAHS[r[1]-1][0]);
+      if(q && !norm(label).includes(q) && ![String(i+1),String(h1),String(h2)].includes(q) && !names.some(n=>norm(n).includes(q))) return;
+      const [,s,a] = RUBS[i*8];
+      const hz = h => { const [hp,hs,ha] = RUBS[(h-1)*4];
+        return `<button class="hizb" data-page="${hp}"><span>الحزب ${ar(h)}</span><small>${SURAHS[hs-1][0]} ${ar(ha)} · ص ${ar(hp)}</small></button>`; };
+      rows.push(`<li class="juzcard">
+        <button class="item" data-page="${page}">
+          <span class="num">${ar(i+1)}</span>
+          <span class="name"><b>${label}</b><small>يبدأ من ${SURAHS[s-1][0]} آية ${ar(a)}</small></span>
+          <span class="pg">صفحة<b>${ar(page)}</b></span></button>
+        <div class="hizbpair">${hz(h1)}${hz(h2)}</div></li>`);
+    });
+  } else if(tab==="thumun"){
+    JUZ_PAGES.forEach((page,i)=>{
+      const label = "الجزء " + ORDINALS[i];
+      const h1 = 2*i+1, h2 = 2*i+2;
+      const names = [...RUBS.slice(i*8, i*8+8), ...THUMUNS.slice(i*8, i*8+8)].map(r=>SURAHS[r[1]-1][0]);
+      if(q && !norm(label).includes(q) && ![String(i+1),String(h1),String(h2)].includes(q) && !names.some(n=>norm(n).includes(q))) return;
+      const [,s,a] = RUBS[i*8];
+      const hz = h => {
+        const cells = [0,1,2,3].map(r=>`<div class="rg"><div class="rglabel">${RUB_SHORT[r]}</div><div class="rgcells">${[2*r,2*r+1].map(k=>{ const [rp,rs,ra,mid] = eighth(h,k);
+          return `<button class="rub" data-page="${rp}" title="${TH_SHORT[k]} من الحزب ${ar(h)} — ${SURAHS[rs-1][0]} آية ${ar(ra)}${mid?" (من وسط الآية)":""}">
+            <span>${TH_SHORT[k]}</span><small>${SURAHS[rs-1][0]} ${ar(ra)}</small><small>ص ${ar(rp)}</small></button>`; }).join("")}</div></div>`).join("");
+        return `<div class="hizbrow"><div class="hlabel">الحزب ${ar(h)}</div><div class="rubs">${cells}</div></div>`; };
+      rows.push(`<li class="juzcard">
+        <button class="item" data-page="${page}">
+          <span class="num">${ar(i+1)}</span>
+          <span class="name"><b>${label}</b><small>يبدأ من ${SURAHS[s-1][0]} آية ${ar(a)}</small></span>
+          <span class="pg">صفحة<b>${ar(page)}</b></span></button>
+        <div class="hizbs">${hz(h1)}${hz(h2)}</div></li>`);
+    });
+  } else {
+    JUZ_PAGES.forEach((page,i)=>{
+      const label = "الجزء " + ORDINALS[i];
+      const h1 = 2*i+1, h2 = 2*i+2;
+      const names = RUBS.slice(i*8, i*8+8).map(r=>SURAHS[r[1]-1][0]);
+      if(q && !norm(label).includes(q) && ![String(i+1),String(h1),String(h2)].includes(q) && !names.some(n=>norm(n).includes(q))) return;
+      const [,s,a] = RUBS[i*8];
+      const hz = h => {
+        const cells = [0,1,2,3].map(k=>{ const [rp,rs,ra] = RUBS[(h-1)*4+k];
+          return `<button class="rub" data-page="${rp}" title="${RUB_NAMES[k]} ${ar(h)} — ${SURAHS[rs-1][0]} آية ${ar(ra)}">
+            <span>${RUB_SHORT[k]}</span><small>${SURAHS[rs-1][0]} ${ar(ra)}</small><small>ص ${ar(rp)}</small></button>`; }).join("");
+        return `<div class="hizbrow"><div class="hlabel">الحزب ${ar(h)}</div><div class="rubs">${cells}</div></div>`; };
+      rows.push(`<li class="juzcard">
+        <button class="item" data-page="${page}">
+          <span class="num">${ar(i+1)}</span>
+          <span class="name"><b>${label}</b><small>يبدأ من ${SURAHS[s-1][0]} آية ${ar(a)}</small></span>
+          <span class="pg">صفحة<b>${ar(page)}</b></span></button>
+        <div class="hizbs">${hz(h1)}${hz(h2)}</div></li>`);
+    });
+  }
+  listEl.innerHTML = rows.join("") || `<li class="empty">لا توجد نتائج</li>`;
+}
+
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+  tab = b.dataset.tab;
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected", x===b));
+  searchEl.placeholder = PLACEHOLDERS[tab];
+  render();
+}));
+searchEl.addEventListener("input", render);
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-page]");
+  if(t) openPage(parseInt(t.dataset.page,10));
+});
+
+function refreshContinue(){
+  const last = store.get();
+  const btn = document.getElementById("continueBtn");
+  if(last>0){
+    btn.classList.remove("hidden");
+    document.getElementById("continueLabel").textContent = last<=QURAN_PAGES
+      ? `سورة ${SURAHS[surahAt(last)][0]} — صفحة ${ar(last)}` : `صفحة ${ar(last)}`;
+    btn.onclick = ()=>openPage(last);
+  } else btn.classList.add("hidden");
+}
+
+/* ---------- Reader ---------- */
+const home = document.getElementById("home"), reader = document.getElementById("reader");
+const img = document.getElementById("pageImg"), loading = document.getElementById("loading");
+const gotoInput = document.getElementById("gotoInput");
+document.getElementById("totalLbl").textContent = "من " + ar(TOTAL);
+let current = 1;
+// الصفحات محفوظة في ملفات، كل ملف فيه 4 صفحات: [عدد][أطوال][بيانات الصور]
+const PER = 4;
+const bundles = new Map();
+function getBundle(k){
+  if(!bundles.has(k)){
+    const pr = fetch(`b/${k}.webp`).then(r=>{ if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(buf=>{
+      const dv = new DataView(buf), n = dv.getUint32(0,true);
+      let off = 4 + 4*n; const urls = [];
+      for(let i=0;i<n;i++){ const len=dv.getUint32(4+4*i,true);
+        urls.push(URL.createObjectURL(new Blob([buf.slice(off,off+len)],{type:"image/webp"}))); off+=len; }
+      return urls;
+    }).catch(e=>{ bundles.delete(k); throw e; });
+    bundles.set(k, pr);
+  }
+  return bundles.get(k);
+}
+const pageUrl = p => getBundle(Math.floor((p-1)/PER)).then(u=>u[(p-1)%PER]);
+function preload(p){ if(p>=1 && p<=TOTAL) getBundle(Math.floor((p-1)/PER)).catch(()=>{}); }
+
+function openPage(p){
+  p = Math.max(1, Math.min(TOTAL, p|0));
+  if(location.hash !== "#page-"+p) location.hash = "page-"+p;
+  else show(p);
+}
+
+function show(p){
+  current = p;
+  home.classList.add("hidden"); reader.classList.remove("hidden");
+  loading.classList.remove("hidden");
+  loading.textContent = "جارٍ التحميل…";
+  img.classList.add("pending");
+  img.onload = ()=>{ loading.classList.add("hidden"); img.classList.remove("pending"); };
+  pageUrl(p).then(u=>{ if(current===p){ img.src = u; stage.scrollTop = 0; } })
+    .catch(()=>{ if(current===p) loading.textContent = "تعذّر تحميل الصفحة — حاول مرة أخرى"; });
+  img.alt = "صفحة " + p;
+  if(p<=QURAN_PAGES){
+    document.getElementById("rSurah").textContent = "سورة " + SURAHS[surahAt(p)][0];
+    const r = rubAt(p), k = r%4, h = ar(Math.floor(r/4)+1);
+    document.getElementById("rMeta").textContent = `الجزء ${ORDINALS[juzAt(p)]} · الحزب ${h} · ${RUB_SHORT[k]} · صفحة ${ar(p)}`;
+  } else {
+    document.getElementById("rSurah").textContent = p<=606 ? "دعاء ختم القرآن" : "فهرس السور";
+    document.getElementById("rMeta").textContent = `صفحة ${ar(p)}`;
+  }
+  gotoInput.value = p;
+  document.getElementById("prevBtn").disabled = p<=1;
+  document.getElementById("nextBtn").disabled = p>=TOTAL;
+  store.set(p);
+  preload(p+PER); preload(p-1);
+}
+
+function showHome(){
+  reader.classList.add("hidden"); home.classList.remove("hidden");
+  refreshContinue();
+}
+
+const next = ()=>{ if(current<TOTAL) openPage(current+1); };
+const prev = ()=>{ if(current>1) openPage(current-1); };
+
+document.getElementById("nextBtn").onclick = next;
+document.getElementById("prevBtn").onclick = prev;
+document.getElementById("zoneLeft").onclick = next;   // الكتاب العربي: اليسار = الصفحة التالية
+document.getElementById("zoneRight").onclick = prev;
+const zoomBtn = document.getElementById("zoomBtn");
+function setZoom(on){
+  reader.classList.toggle("zoomed", on);
+  zoomBtn.title = on ? "ملاءمة الشاشة" : "تكبير";
+  zoomBtn.style.background = on ? "var(--accent-soft)" : "";
+  stage.scrollTop = 0;
+}
+zoomBtn.onclick = ()=>setZoom(!reader.classList.contains("zoomed"));
+img.addEventListener("dblclick", ()=>setZoom(!reader.classList.contains("zoomed")));
+document.getElementById("backBtn").onclick = ()=>{ location.hash = ""; };
+document.getElementById("gotoForm").addEventListener("submit", e=>{
+  e.preventDefault(); const v=parseInt(gotoInput.value,10); if(v) openPage(v); gotoInput.blur();
+});
+
+document.addEventListener("keydown", e=>{
+  if(reader.classList.contains("hidden") || e.target===gotoInput) return;
+  if(e.key==="ArrowLeft") next();
+  else if(e.key==="ArrowRight") prev();
+  else if(e.key==="Escape") location.hash="";
+});
+
+// السحب: من اليسار لليمين = الصفحة التالية (زي تقليب المصحف)
+const stage = document.getElementById("stage");
+let sx=0, sy=0, st=0, touches=0;
+stage.addEventListener("touchstart", e=>{ touches=e.touches.length; sx=e.touches[0].clientX; sy=e.touches[0].clientY; st=Date.now(); }, {passive:true});
+stage.addEventListener("touchend", e=>{
+  if(touches>1) return;
+  const t=e.changedTouches[0], dx=t.clientX-sx, dy=t.clientY-sy;
+  if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5){ dx>0 ? next() : prev(); }
+  else if(Math.abs(dx)<10 && Math.abs(dy)<10 && Date.now()-st<300){ reader.classList.toggle("immersive"); }
+}, {passive:true});
+
+/* ---------- Routing ---------- */
+function route(){
+  const m = location.hash.match(/^#page-(\d+)$/);
+  if(m) show(Math.max(1, Math.min(TOTAL, parseInt(m[1],10))));
+  else showHome();
+}
+window.addEventListener("hashchange", route);
+render(); route();
+</script>
+</body>
+</html>
