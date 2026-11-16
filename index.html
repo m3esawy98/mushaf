@@ -557,14 +557,30 @@ render(); route();
     const c = await caches.open(PAGES_CACHE);
     prog.classList.remove("hidden");
     let done = 0, failed = 0, next = 0;
-    const show = () => { bar.style.width = (done/NB*100)+"%"; txt.textContent = `جارٍ الحفظ… ${ar(done)} من ${ar(NB)}`; };
+    const inflight = new Map(); let bytes = 0, raf = 0;
+    const paint = () => { raf = 0; let f = done; inflight.forEach(v => f += v);
+      const pct = Math.min(100, f/NB*100);
+      bar.style.width = Math.max(pct, 1) + "%";
+      txt.textContent = `جارٍ الحفظ… ${ar(Math.floor(pct))}٪ — ${ar(Math.round(bytes/1e6))} ميجا`; };
+    const show = () => { if(!raf) raf = requestAnimationFrame(paint); };
     show();
     async function worker(){
       while(next < NB){
         const k = next++, u = urlOf(k);
         try{
-          if(!(await c.match(u))){ const r = await fetch(u, {cache:"no-store"}); if(!r.ok) throw 0; await c.put(u, r); }
-        }catch(e){ failed++; }
+          if(!(await c.match(u))){
+            const r = await fetch(u, {cache:"no-store"}); if(!r.ok) throw 0;
+            const len = +r.headers.get("content-length") || 0;
+            if(r.body && r.body.getReader){
+              const rd = r.body.getReader(), chunks = []; let got = 0;
+              for(;;){ const {done:end, value} = await rd.read(); if(end) break;
+                chunks.push(value); got += value.length; bytes += value.length;
+                if(len) inflight.set(k, Math.min(got/len, .99)); show(); }
+              await c.put(u, new Response(new Blob(chunks, {type:"image/webp"}), {headers:{"Content-Type":"image/webp"}}));
+            } else { await c.put(u, r); }
+          }
+          inflight.delete(k);
+        }catch(e){ failed++; inflight.delete(k); }
         done++; show();
       }
     }
