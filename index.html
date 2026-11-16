@@ -479,6 +479,7 @@ function show(p){
 
 function showHome(){
   reader.classList.add("hidden"); home.classList.remove("hidden");
+  if(searchEl.value){ searchEl.value = ""; render(); }
   refreshContinue();
 }
 
