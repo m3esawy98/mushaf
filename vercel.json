@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/b/(.*)",
+      "source": "/hq/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
