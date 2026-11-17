@@ -64,14 +64,17 @@
 
   /* browse cards */
   .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .bcard{display:flex;flex-direction:column;justify-content:space-between;gap:14px;min-height:124px;padding:14px;background:var(--card);border-radius:16px}
-  .bcard .top{display:flex;align-items:flex-start;justify-content:space-between}
-  .bcard .ic{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center}
+  .bcard{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;row-gap:8px;padding:14px 16px;background:var(--card);border-radius:16px}
+  .bcard .row{display:contents}
+  .bcard:not(.wide) .n{align-self:end;justify-self:center;text-align:center}
+  .bcard:not(.wide) .u{align-self:start;justify-self:center;text-align:center;margin-top:-4px;font-size:14px}
+  .bcard:not(.wide) .nm{align-self:start}
+  .bcard .ic{flex:none;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center}
   .bcard .nm{font-family:var(--head);font-size:16px;font-weight:600;line-height:1.4}
   .bcard .cnt{display:flex;align-items:baseline;gap:4px}
-  .bcard .n{font-family:var(--head);font-size:20px;font-weight:600;line-height:1.2}
+  .bcard .n{font-family:var(--head);font-size:28px;font-weight:600;line-height:1}
   .bcard .u{font-size:12px;color:var(--muted)}
-  .bcard.wide{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;min-height:80px}
+  .bcard.wide{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;gap:14px;min-height:80px}
   .bcard.wide .ic{flex:none;width:52px;height:52px;border-radius:16px}
   .bcard.wide .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .bcard.wide .nm{font-size:20px}
@@ -240,20 +243,20 @@
         <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
       </a>
       <a class="bcard press" href="#sec/juz">
-        <span class="top"><span class="ic" style="background:#f6ecd6;color:#86651f"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="4.5" height="16" rx="1"/><rect x="9.5" y="4" width="4.5" height="16" rx="1"/><path d="M15.8 5.4l3.7-1 3 14.8-3.7 1z"/><path d="M3 8h4.5M9.5 8H14"/></svg></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></span>
-        <span><span class="nm" style="display:block">الأجزاء</span><span class="cnt"><span class="n" style="color:#86651f">٣٠</span><span class="u">جزء</span></span></span>
+        <span class="row"><span class="ic" style="background:#f6ecd6;color:#86651f"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="4.5" height="16" rx="1"/><rect x="9.5" y="4" width="4.5" height="16" rx="1"/><path d="M15.8 5.4l3.7-1 3 14.8-3.7 1z"/><path d="M3 8h4.5M9.5 8H14"/></svg></span><span class="n" style="color:#86651f">٣٠</span></span>
+        <span class="row"><span class="nm">الأجزاء</span><span class="u">جزء</span></span>
       </a>
       <a class="bcard press" href="#sec/hizb">
-        <span class="top"><span class="ic" style="background:#ede4d3;color:#6b5636"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" fill-opacity=".3"/><path d="M12 3v18"/></svg></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></span>
-        <span><span class="nm" style="display:block">الأحزاب</span><span class="cnt"><span class="n" style="color:#6b5636">٦٠</span><span class="u">حزب</span></span></span>
+        <span class="row"><span class="ic" style="background:#ede4d3;color:#6b5636"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" fill-opacity=".3"/><path d="M12 3v18"/></svg></span><span class="n" style="color:#6b5636">٦٠</span></span>
+        <span class="row"><span class="nm">الأحزاب</span><span class="u">حزب</span></span>
       </a>
       <a class="bcard press" href="#sec/rub">
-        <span class="top"><span class="ic" style="background:#f4e4dc;color:#8a4a32"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13"/><rect x="5.5" y="5.5" width="13" height="13" transform="rotate(45 12 12)"/><circle cx="12" cy="12" r="2.6"/></svg></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></span>
-        <span><span class="nm" style="display:block">الأرباع</span><span class="cnt"><span class="n" style="color:#8a4a32">٢٤٠</span><span class="u">ربع</span></span></span>
+        <span class="row"><span class="ic" style="background:#f4e4dc;color:#8a4a32"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13"/><rect x="5.5" y="5.5" width="13" height="13" transform="rotate(45 12 12)"/><circle cx="12" cy="12" r="2.6"/></svg></span><span class="n" style="color:#8a4a32">٢٤٠</span></span>
+        <span class="row"><span class="nm">الأرباع</span><span class="u">ربع</span></span>
       </a>
       <a class="bcard press" href="#sec/thumun">
-        <span class="top"><span class="ic" style="background:#e2e8ee;color:#3b5468"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 21V11a5.5 5.5 0 0 1 11 0v10z"/><path d="M4.5 21h15"/><path d="M12 5.5V3"/><circle cx="12" cy="14" r="2"/></svg></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></span>
-        <span><span class="nm" style="display:block">الأثمان</span><span class="cnt"><span class="n" style="color:#3b5468">٤٨٠</span><span class="u">ثمن</span></span></span>
+        <span class="row"><span class="ic" style="background:#e2e8ee;color:#3b5468"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 21V11a5.5 5.5 0 0 1 11 0v10z"/><path d="M4.5 21h15"/><path d="M12 5.5V3"/><circle cx="12" cy="14" r="2"/></svg></span><span class="n" style="color:#3b5468">٤٨٠</span></span>
+        <span class="row"><span class="nm">الأثمان</span><span class="u">ثمن</span></span>
       </a>
     </div>
 
