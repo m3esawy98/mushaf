@@ -14,7 +14,7 @@
 <title>المصحف الشريف</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#f3ecdf; --card:#fffdf8; --ink:#2a2418; --muted:#6f6552; --line:#e3d8c4;
@@ -220,6 +220,54 @@
   .bmc .rubl{display:block;padding:0 10px 9px;margin-top:-4px;font-size:12px;color:var(--muted);white-space:nowrap;text-align:center}
   .mrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .rubpill{height:22px;padding:0 8px;border-radius:999px;background:#f4e4dc;color:#8a4a32;font-size:12px;font-weight:600;display:inline-flex;align-items:center}
+  /* tadabbur */
+  .btabs{display:flex;gap:4px;padding:4px;background:#e9e1d2;border-radius:12px;margin:4px 0 12px}
+  .btabs a{flex:1;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted)}
+  .btabs a[aria-current="page"]{background:var(--card);color:var(--accent);font-weight:600}
+  .gchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:10px 0 12px;padding-bottom:2px}
+  .gchips::-webkit-scrollbar{display:none}
+  .gchips.wrap{flex-wrap:wrap;overflow:visible;margin:0}
+  .gchips button{flex:none;height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap}
+  .gchips button[aria-pressed="true"]{border-color:transparent;background:var(--accent);color:#fff;font-weight:600}
+  .gchips.wrap button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+  .gchips button.add{border-style:dashed;color:var(--muted);background:transparent}
+  .tdlist{display:flex;flex-direction:column;gap:10px}
+  .tdc{background:var(--card);border-radius:16px;padding:14px 14px 6px;display:flex;flex-direction:column;gap:10px}
+  .tdc .hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .tdc .hd b{font-family:var(--head);font-size:16px;font-weight:600;color:var(--accent)}
+  .tdc .gs{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+  .tdc .gs span{height:24px;padding:0 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;display:flex;align-items:center}
+  .qt{margin:0;font-family:"Amiri Quran",serif;font-size:20px;line-height:2.1;color:var(--ink);text-align:justify}
+  .qt i{font-style:normal;color:var(--gold-ink);font-size:.85em}
+  .tdc .note{display:flex;gap:8px;background:#fbf3e2;border-radius:12px;padding:10px 12px;color:#6b5636;font-size:14px;line-height:1.7;white-space:pre-wrap}
+  .tdc .ft{display:flex;align-items:center;gap:2px;border-top:1px solid #f0e8da;padding-top:4px}
+  .tdc .ft small{flex:1;min-width:0;font-size:12px;line-height:1.6;color:#8a8070}
+  .tdc .ft button{flex:none;width:40px;height:40px;border:0;border-radius:10px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .tdc .ft button.open{color:var(--accent)}
+  .vsep{width:1px;height:24px;background:var(--line);margin:0 2px}
+  #tdBtn.on{background:var(--accent-soft);color:var(--accent)}
+  #tdBtn.on svg{fill:currentColor}
+  .sheetbg{position:absolute;inset:0;background:rgba(42,36,24,.35);z-index:6}
+  .sheet{position:absolute;left:0;right:0;bottom:0;z-index:7;max-height:88%;overflow-y:auto;background:var(--card);border-radius:22px 22px 0 0;
+    padding:12px 16px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;box-shadow:0 -8px 28px rgba(42,36,24,.16)}
+  .sheet .grab{align-self:center;width:36px;height:4px;border-radius:999px;background:var(--line);flex:none}
+  .sheet .shd{display:flex;align-items:center;gap:10px}
+  .sheet .shd .ic{flex:none;width:36px;height:36px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center}
+  .sheet .shd b{font-size:16px;font-weight:600}
+  .sheet .shd small{font-size:12px;color:var(--muted)}
+  .ayahs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .ayahs .sn{width:100%;font-size:12px;font-weight:600;color:var(--gold-ink);margin-top:2px}
+  .ayahs button{min-width:42px;height:38px;padding:0 8px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-size:14px;font-weight:600;cursor:pointer}
+  .ayahs button.in{border-color:transparent;background:#c8ddd1;color:var(--accent)}
+  .ayahs button.end{border-color:transparent;background:var(--accent);color:#fff}
+  .ayahs button.saved:not(.in):not(.end){border-color:var(--accent);color:var(--accent)}
+  .sheet .prev{background:var(--bg);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+  .sheet .prev b{font-size:14px;font-weight:600;color:var(--accent)}
+  .sheet .prev .qt{font-size:18px;line-height:2;max-height:6.2em;overflow:auto}
+  .slbl{font-size:12px;font-weight:600;color:var(--muted)}
+  .sheet textarea{resize:none;border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px;font:inherit;font-size:16px;line-height:1.6;color:var(--ink);outline:none}
+  .sheet textarea:focus{border-color:var(--accent)}
+  .sbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 </style>
 </head>
 <body>
@@ -323,6 +371,11 @@
     <div class="top"><h1 class="title1">العلامات</h1>
       <span style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;color:var(--muted)" id="bmCount"></span>
       <a class="syncchip press" href="#sync" id="syncChip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20v-4h-4"/></svg><span id="syncChipTxt">مزامنة</span></a></span></div>
+    <nav class="btabs" aria-label="أقسام العلامات">
+      <a href="#bookmarks" id="tabBm">العلامات</a>
+      <a href="#tadabbur" id="tabTd">✦ التدبر</a>
+    </nav>
+    <div id="paneBm">
     <p class="lead">احفظ أي صفحة من زرار العلامة وانت بتقرا.</p>
     <div class="bmlist" id="bmList"></div>
     <div class="emptybox hidden" id="bmEmpty">
@@ -330,6 +383,20 @@
       <b>احفظ أول علامة</b>
       <p>افتح أي صفحة ودوس على زرار العلامة اللي فوق، وهتلاقيها هنا.</p>
       <a class="btn press" href="#index/surahs" style="margin-top:6px">افتح الفهرس</a>
+    </div>
+    </div>
+    <div id="paneTd" class="hidden">
+      <label class="searchbox" style="margin-top:0"><span class="sr">بحث في آيات التدبر</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="tdSearch" type="search" placeholder="ابحث في ملاحظاتك أو اسم السورة" autocomplete="off">
+      </label>
+      <div class="gchips" id="tdChips" role="group" aria-label="المجموعات"></div>
+      <div class="tdlist" id="tdList"></div>
+      <div class="emptybox hidden" id="tdEmpty">
+        <span class="ic" style="background:var(--accent-soft);color:var(--accent)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.4 6.1L21 12l-6.6 2.9L12 21l-2.4-6.1L3 12l6.6-2.9z"/></svg></span>
+        <b>احفظ أول آية للتدبر</b>
+        <p>وانت بتقرا، دوس على ✦ اللي فوق واختار الآية، وضيف ملاحظتك ومجموعتها.</p>
+      </div>
     </div>
   </section>
 
@@ -404,6 +471,7 @@
       <div class="hd"><span class="ic" style="background:var(--gold-soft);color:var(--gold-ink)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
         <span><b>مش متاح هنا</b><small>التثبيت والحفظ بدون نت بيشتغلوا في نسخة الموقع.</small></span></div>
     </div>
+    <p class="lead" style="font-size:12px;text-align:center;margin-top:14px">نص الآيات في التدبر: المصحف العثماني برواية حفص من موسوعة القرآن الكريم (QuranEnc.com).</p>
     <div class="chips">
       <button class="chip press" data-page="605">دعاء ختم القرآن</button>
       <button class="chip press" data-page="607">فهرس السور المطبوع</button>
@@ -422,8 +490,8 @@
   <div class="bar top">
     <button class="iconbtn" id="backBtn" aria-label="رجوع"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     <div class="title"><b id="rSurah"></b><small id="rMeta"></small></div>
+    <button class="iconbtn" id="tdBtn" aria-label="حفظ آيات للتدبر"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.4 6.1L21 12l-6.6 2.9L12 21l-2.4-6.1L3 12l6.6-2.9z"/></svg></button>
     <button class="iconbtn" id="bmBtn" aria-pressed="false" aria-label="حفظ علامة على الصفحة"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
-    <button class="iconbtn" id="zoomBtn" aria-label="تكبير الصفحة"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg></button>
   </div>
   <div class="stage" id="stage">
     <span class="loading" id="loading">جارٍ التحميل…</span>
@@ -437,6 +505,24 @@
       <label for="gotoInput" style="color:var(--muted);font-size:14px">صفحة</label><input id="gotoInput" type="number" inputmode="numeric" min="1" max="608"><span id="totalLbl"></span>
     </form>
     <button class="iconbtn" id="nextBtn" aria-label="الصفحة التالية"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <span class="vsep" aria-hidden="true"></span>
+    <button class="iconbtn" id="zoomBtn" aria-label="تكبير الصفحة"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg></button>
+  </div>
+  <div class="sheetbg hidden" id="tdBg"></div>
+  <div class="sheet hidden" id="tdSheet" role="dialog" aria-modal="true" aria-labelledby="tdTitle">
+    <div class="grab"></div>
+    <div class="shd">
+      <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.4 6.1L21 12l-6.6 2.9L12 21l-2.4-6.1L3 12l6.6-2.9z"/></svg></span>
+      <span style="flex:1;display:flex;flex-direction:column"><b class="h" id="tdTitle">حفظ للتدبر</b><small id="tdHint"></small></span>
+    </div>
+    <div class="ayahs" id="tdAyahs" role="group" aria-label="آيات الصفحة"></div>
+    <div class="prev"><b class="h" id="tdRef"></b><p class="qt" id="tdPrev"></p></div>
+    <span class="slbl">المجموعات</span>
+    <div class="gchips wrap" id="tdGroups"></div>
+    <label class="slbl" for="tdNote">ملاحظتك (اختياري)</label>
+    <textarea id="tdNote" rows="2" placeholder="إيه اللي وقفك في الآية دي؟"></textarea>
+    <div class="sbtns"><button class="btn press" id="tdSave">حفظ</button><button class="btn ghost press" id="tdCancel">إلغاء</button></div>
+    <button class="wstop hidden" id="tdDel">حذف من التدبر</button>
   </div>
 </section>
 
@@ -545,6 +631,8 @@ function surahAt(p){ let s=0; for(let i=0;i<SURAHS.length;i++){ if(SURAHS[i][1]<
 function hizbAt(p){ let j=0; for(let i=0;i<HIZB_PAGES.length;i++){ if(HIZB_PAGES[i]<=p) j=i; else break; } return j; }
 function rubAt(p){ let j=0; for(let i=0;i<RUBS.length;i++){ if(RUBS[i][0]<=p) j=i; else break; } return j; }
 function juzAt(p){ let j=0; for(let i=0;i<JUZ_PAGES.length;i++){ if(JUZ_PAGES[i]<=p) j=i; else break; } return j; }
+const PAGE_START_ID = [1,8,13,24,32,37,45,56,65,69,77,84,91,96,101,109,113,120,127,134,142,149,153,161,171,177,184,189,194,198,204,210,218,223,227,232,238,241,245,253,256,260,264,267,272,277,282,289,290,294,303,309,316,323,331,339,346,355,364,371,377,385,394,402,409,415,426,434,442,447,451,459,467,474,480,488,494,500,505,508,513,517,520,527,531,538,545,553,559,568,573,580,585,588,595,599,607,615,621,628,634,641,648,656,664,669,672,675,679,683,687,693,701,706,711,715,720,727,734,740,746,752,759,765,773,778,783,790,798,808,817,825,834,842,849,858,863,871,880,884,891,900,908,914,921,927,932,936,941,947,955,966,977,985,992,998,1006,1012,1022,1028,1036,1042,1050,1059,1075,1085,1092,1098,1104,1110,1114,1118,1125,1133,1142,1150,1161,1169,1177,1186,1194,1201,1206,1213,1222,1230,1236,1242,1249,1256,1262,1267,1272,1276,1283,1290,1297,1304,1308,1315,1322,1329,1335,1342,1347,1353,1358,1365,1371,1379,1385,1390,1398,1407,1418,1426,1435,1443,1453,1462,1471,1479,1486,1493,1502,1511,1519,1527,1536,1545,1555,1562,1571,1582,1591,1601,1611,1619,1627,1634,1640,1649,1660,1666,1675,1683,1692,1700,1708,1713,1721,1726,1736,1742,1750,1756,1761,1769,1775,1784,1793,1803,1818,1834,1854,1873,1893,1908,1916,1928,1936,1944,1956,1966,1974,1981,1989,1995,2004,2012,2020,2030,2037,2047,2057,2068,2079,2088,2096,2105,2116,2126,2134,2145,2156,2161,2168,2175,2186,2194,2202,2215,2224,2238,2251,2262,2276,2289,2302,2315,2327,2346,2361,2386,2400,2413,2425,2436,2447,2462,2474,2484,2494,2508,2519,2528,2541,2556,2565,2574,2585,2596,2601,2611,2619,2626,2634,2642,2651,2660,2668,2674,2691,2701,2716,2733,2748,2763,2778,2792,2802,2812,2819,2823,2828,2835,2845,2850,2853,2858,2867,2876,2888,2899,2911,2923,2933,2952,2972,2993,3016,3044,3069,3092,3116,3139,3160,3173,3182,3195,3204,3215,3223,3236,3248,3258,3266,3274,3281,3288,3296,3303,3312,3323,3330,3337,3347,3355,3364,3371,3379,3386,3393,3404,3415,3425,3434,3442,3451,3460,3470,3481,3489,3498,3504,3515,3524,3534,3540,3549,3556,3564,3569,3577,3584,3588,3596,3607,3614,3621,3629,3638,3646,3655,3664,3672,3679,3691,3699,3705,3718,3733,3746,3760,3776,3789,3813,3840,3865,3891,3915,3942,3971,3987,3997,4013,4032,4054,4064,4069,4080,4090,4099,4106,4115,4126,4133,4141,4150,4159,4167,4174,4183,4192,4200,4211,4219,4230,4239,4248,4257,4265,4273,4283,4288,4295,4304,4317,4324,4336,4348,4359,4373,4386,4399,4415,4433,4454,4474,4487,4496,4506,4516,4525,4531,4539,4546,4557,4565,4575,4584,4593,4599,4607,4612,4617,4624,4631,4646,4666,4682,4706,4727,4750,4767,4785,4811,4829,4853,4874,4896,4918,4942,4969,4996,5030,5056,5079,5087,5094,5100,5105,5111,5116,5126,5130,5136,5143,5151,5156,5162,5169,5178,5186,5193,5200,5209,5218,5223,5230,5237,5242,5254,5268,5287,5314,5332,5358,5386,5415,5430,5448,5461,5476,5495,5513,5543,5571,5597,5617,5642,5673,5703,5728,5759,5801,5830,5855,5883,5910,5932,5964,5994,6017,6044,6073,6099,6126,6138,6156,6177,6194,6208,6222];
+const SURAH_AYAHS = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
 
 const PAGES_DIR = "hq";   // فولدر صور الصفحات
 const $ = id => document.getElementById(id);
@@ -830,6 +918,9 @@ function show(p){
     $("rMeta").textContent = `الجزء ${ar(m.juz)} · الحزب ${ar(m.hizb)} · ${RUB_SHORT[m.rub]} · ص ${ar(p)}`;
   } else { $("rSurah").textContent = m.name; $("rMeta").textContent = `صفحة ${ar(p)}`; }
   setBm(bm.has(p));
+  tdSheet.classList.add("hidden"); tdBg.classList.add("hidden");
+  if(typeof paintTdBtn==="function") paintTdBtn();
+  if(pendingTdEdit){ const id = pendingTdEdit; pendingTdEdit = null; setTimeout(()=>openTd(id), 50); }
   gotoInput.value = p;
   $("prevBtn").disabled = p<=1;
   $("nextBtn").disabled = p>=TOTAL;
@@ -876,6 +967,147 @@ stage.addEventListener("touchend", e=>{
 }, {passive:true});
 
 
+
+/* ---------- التدبر ---------- */
+const SURAH_START = (()=>{ const a = [0]; let c = 0; for(const n of SURAH_AYAHS){ c += n; a.push(c); } return a; })();
+const idOf = (s,a) => SURAH_START[s-1] + a;
+const saOf = id => { let s = 1; while(SURAH_START[s] < id) s++; return [s, id - SURAH_START[s-1]]; };
+const pageOfId = id => { let lo = 0, hi = PAGE_START_ID.length-1; while(lo<hi){ const m = (lo+hi+1)>>1; if(PAGE_START_ID[m] <= id) lo = m; else hi = m-1; } return lo+1; };
+function pageAyahs(p){ if(p<1 || p>QURAN_PAGES) return []; const a = PAGE_START_ID[p-1], b = p<QURAN_PAGES ? PAGE_START_ID[p]-1 : 6236; const out = []; for(let i=a;i<=b;i++) out.push(saOf(i)); return out; }
+const esc = x => String(x).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let QTXT = null;
+function qtext(){ if(!QTXT) QTXT = fetch("quran-text.json").then(r=>{ if(!r.ok) throw 0; return r.json(); }).catch(e=>{ QTXT = null; throw e; }); return QTXT; }
+const ayahHTML = (T,s,a,b) => { const h = []; for(let k=a;k<=b;k++) h.push(`${esc(T[s-1][k-1])} <i>﴿${ar(k)}﴾</i>`); return h.join(" "); };
+const tdId = (s,a,b) => `${s}:${a}-${b}`;
+const tdRef = e => `${SURAHS[e.s-1][0]} · ${e.a===e.b ? ar(e.a) : ar(e.a)+"–"+ar(e.b)}`;
+const TD = {
+  all(){ const a = LS.get("mushaf:tdb", []); return Array.isArray(a) ? a.filter(x=>x && x.s && x.a) : []; },
+  dels(){ const d = LS.get("mushaf:tdbdel", {}); return d && typeof d==="object" ? d : {}; },
+  groups(){ const g = LS.get("mushaf:tdbGroups", null); const base = Array.isArray(g) ? g : ["صبر","رحمة","دعاء","طمأنينة"];
+    const extra = []; this.all().forEach(x=>(x.g||[]).forEach(n=>{ if(!base.includes(n) && !extra.includes(n)) extra.push(n); })); return [...base, ...extra]; },
+  addGroup(n){ const g = this.groups(); if(!g.includes(n)){ g.push(n); LS.set("mushaf:tdbGroups", g); } },
+  get(id){ return this.all().find(x=>x.id===id); },
+  save(e){ const a = this.all().filter(x=>x.id!==e.id); e.t = Date.now(); LS.set("mushaf:tdb", [e, ...a]); const d = this.dels(); delete d[e.id]; LS.set("mushaf:tdbdel", d); syncSoon(); },
+  remove(id){ LS.set("mushaf:tdb", this.all().filter(x=>x.id!==id)); const d = this.dels(); d[id] = Date.now(); LS.set("mushaf:tdbdel", d); syncSoon(); },
+  onPage(p){ const ay = pageAyahs(p); if(!ay.length) return []; const lo = idOf(...ay[0]), hi = idOf(...ay[ay.length-1]);
+    return this.all().filter(x=>{ const A = idOf(x.s,x.a), B = idOf(x.s,x.b); return B>=lo && A<=hi; }); }
+};
+
+/* لوحة الحفظ في صفحة القراءة */
+const tdSheet = $("tdSheet"), tdBg = $("tdBg"), tdBtn = $("tdBtn");
+let tdSel = null, tdGroupsSel = [], tdEditId = null, tdFresh = true;
+function paintTdBtn(){ const on = current<=QURAN_PAGES && TD.onPage(current).length>0; tdBtn.classList.toggle("on", on);
+  tdBtn.setAttribute("aria-label", on ? "آيات التدبر في الصفحة دي" : "حفظ آيات للتدبر"); tdBtn.classList.toggle("hidden", current>QURAN_PAGES); }
+function closeTd(){ tdSheet.classList.add("hidden"); tdBg.classList.add("hidden"); paintTdBtn(); }
+function loadEntry(e){ tdSel = {s:e.s, a:e.a, b:e.b}; tdEditId = e.id; tdGroupsSel = [...(e.g||[])]; $("tdNote").value = e.note || ""; }
+function openTd(editId){
+  const ay = pageAyahs(current); if(!ay.length) return;
+  const e = editId ? TD.get(editId) : TD.onPage(current)[0];
+  tdFresh = true;
+  if(e) loadEntry(e);
+  else { tdSel = {s:ay[0][0], a:ay[0][1], b:ay[0][1]}; tdEditId = null; tdGroupsSel = []; $("tdNote").value = ""; }
+  tdSheet.classList.remove("hidden"); tdBg.classList.remove("hidden"); paintTdSheet();
+}
+function paintTdSheet(){
+  const ay = pageAyahs(current), {s, a, b} = tdSel, lo = Math.min(a,b), hi = Math.max(a,b);
+  const saved = new Set(); TD.onPage(current).forEach(x=>{ for(let k=x.a;k<=x.b;k++) saved.add(x.s+":"+k); });
+  const multi = new Set(ay.map(x=>x[0])).size > 1;
+  let html = "", lastS = 0;
+  ay.forEach(([ss,aa])=>{
+    if(multi && ss!==lastS){ html += `<span class="sn">سورة ${SURAHS[ss-1][0]}</span>`; lastS = ss; }
+    const inR = ss===s && aa>=lo && aa<=hi, end = inR && (aa===lo || aa===hi);
+    html += `<button type="button" data-s="${ss}" data-a="${aa}" class="${end?"end":inR?"in":""}${saved.has(ss+":"+aa)?" saved":""}" aria-pressed="${inR}">${ar(aa)}</button>`;
+  });
+  $("tdAyahs").innerHTML = html;
+  const id = tdId(s, lo, hi), exists = TD.get(id);
+  $("tdTitle").textContent = exists || tdEditId ? "تعديل آيات التدبر" : "حفظ للتدبر";
+  $("tdHint").textContent = lo===hi ? "دوس على آية تانية من نفس السورة لو عايز أكتر من آية" : `اتحدد ${ar(hi-lo+1)} آيات · دوس تاني عشان تبدأ من جديد`;
+  $("tdRef").textContent = tdRef({s, a:lo, b:hi});
+  $("tdPrev").textContent = "…";
+  qtext().then(T=>{ if(tdSel && tdSel.s===s && Math.min(tdSel.a,tdSel.b)===lo && Math.max(tdSel.a,tdSel.b)===hi) $("tdPrev").innerHTML = ayahHTML(T, s, lo, hi); })
+    .catch(()=>{ $("tdPrev").textContent = "نص الآيات مش متاح دلوقتي — اتأكد من النت"; });
+  const gs = TD.groups();
+  $("tdGroups").innerHTML = gs.map(n=>`<button type="button" data-g="${esc(n)}" aria-pressed="${tdGroupsSel.includes(n)}">${esc(n)}</button>`).join("") + `<button type="button" class="add" id="tdAddG">＋ مجموعة جديدة</button>`;
+  $("tdDel").classList.toggle("hidden", !(tdEditId || exists));
+}
+$("tdAyahs").addEventListener("click", e=>{
+  const t = e.target.closest("button[data-a]"); if(!t) return;
+  const s = +t.dataset.s, a = +t.dataset.a;
+  if(tdFresh || tdSel.a!==tdSel.b || tdSel.s!==s || a===tdSel.a){ tdSel = {s, a, b:a}; tdFresh = false; } else tdSel.b = a;
+  const lo = Math.min(tdSel.a,tdSel.b), hi = Math.max(tdSel.a,tdSel.b), ex = TD.get(tdId(s,lo,hi));
+  if(ex) loadEntry(ex);
+  paintTdSheet();
+});
+$("tdGroups").addEventListener("click", e=>{
+  const t = e.target.closest("button"); if(!t) return;
+  if(t.id==="tdAddG"){ const n = (prompt("اسم المجموعة الجديدة") || "").trim().slice(0,30); if(!n) return; TD.addGroup(n); if(!tdGroupsSel.includes(n)) tdGroupsSel.push(n); paintTdSheet(); return; }
+  const n = t.dataset.g; tdGroupsSel = tdGroupsSel.includes(n) ? tdGroupsSel.filter(x=>x!==n) : [...tdGroupsSel, n];
+  t.setAttribute("aria-pressed", tdGroupsSel.includes(n));
+});
+$("tdSave").onclick = ()=>{
+  const {s, a, b} = tdSel, lo = Math.min(a,b), hi = Math.max(a,b), id = tdId(s,lo,hi);
+  if(tdEditId && tdEditId!==id) TD.remove(tdEditId);
+  TD.save({id, s, a:lo, b:hi, note: $("tdNote").value.trim().slice(0,2000), g: tdGroupsSel});
+  closeTd(); toast(`✦ اتحفظت ${tdRef({s,a:lo,b:hi})} <a href="#tadabbur">عرض</a>`);
+};
+$("tdCancel").onclick = closeTd;
+tdBg.onclick = closeTd;
+$("tdDel").onclick = ()=>{
+  const {s, a, b} = tdSel, id = tdEditId || tdId(s, Math.min(a,b), Math.max(a,b));
+  if(!confirm("تشيل الآيات دي من التدبر؟ ملاحظتك هتتمسح.")) return;
+  TD.remove(id); closeTd(); toast("اتشالت من التدبر");
+};
+tdBtn.onclick = ()=>openTd();
+let pendingTdEdit = null;
+
+/* صفحة التدبر */
+let tdGroup = "الكل";
+const tdSearch = $("tdSearch");
+function renderTd(){
+  const all = TD.all().sort((x,y)=>y.t-x.t);
+  const q = norm(tdSearch.value || "");
+  const used = TD.groups().filter(n=>all.some(x=>(x.g||[]).includes(n)));
+  if(tdGroup!=="الكل" && !used.includes(tdGroup)) tdGroup = "الكل";
+  $("tdChips").innerHTML = [["الكل", all.length], ...used.map(n=>[n, all.filter(x=>(x.g||[]).includes(n)).length])]
+    .map(([n,c])=>`<button type="button" data-g="${esc(n)}" aria-pressed="${tdGroup===n}">${esc(n)} ${ar(c)}</button>`).join("");
+  $("tdChips").classList.toggle("hidden", !all.length);
+  const list = all.filter(x => (tdGroup==="الكل" || (x.g||[]).includes(tdGroup)) &&
+    (!q || norm(SURAHS[x.s-1][0]).includes(q) || norm(x.note||"").includes(q) || (x.g||[]).some(n=>norm(n).includes(q))));
+  $("tdEmpty").classList.toggle("hidden", all.length>0);
+  $("bmCount").textContent = all.length ? (all.length===1 ? "آية واحدة" : all.length===2 ? "آيتين" : ar(all.length) + (all.length<=10 ? " آيات" : " آية")) : "";
+  const I = d => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  $("tdList").innerHTML = list.length || !all.length ? list.map(x=>{
+    const p = pageOfId(idOf(x.s,x.a)), m = pageMeta(p);
+    return `<article class="tdc" data-id="${x.id}">
+      <div class="hd"><b>${tdRef(x)}</b><span class="gs">${(x.g||[]).map(n=>`<span>${esc(n)}</span>`).join("")}</span></div>
+      <p class="qt" data-q="${x.s}:${x.a}:${x.b}">…</p>
+      ${x.note ? `<div class="note">${I('<path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>')}<span>${esc(x.note)}</span></div>` : ""}
+      <div class="ft"><small>ص ${ar(p)} · الحزب ${ar(m.hizb)} · الربع ${ar(m.rub+1)}<br>${when(x.t)}</small>
+        <button class="open" data-act="open" aria-label="افتح في المصحف">${I('<path d="M2 5.5c3.2-1.6 7-1.4 10 1 3-2.4 6.8-2.6 10-1v13.5c-3.2-1.6-7-1.4-10 1-3-2.4-6.8-2.6-10-1z"/><path d="M12 6.5v14"/>')}</button>
+        <button data-act="edit" aria-label="تعديل الملاحظة والمجموعات">${I('<path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>')}</button>
+        <button data-act="copy" aria-label="نسخ الآية">${I('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>')}</button>
+        <button data-act="del" aria-label="حذف من التدبر">${I('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>')}</button>
+      </div></article>`; }).join("") : `<p class="empty">مفيش نتايج</p>`;
+  qtext().then(T=>{ $("tdList").querySelectorAll("p.qt[data-q]").forEach(el=>{ const [s,a,b] = el.dataset.q.split(":").map(Number); el.innerHTML = ayahHTML(T, s, a, b); }); })
+    .catch(()=>{ $("tdList").querySelectorAll("p.qt[data-q]").forEach(el=>{ el.textContent = "نص الآية مش متاح دلوقتي — اتأكد من النت"; }); });
+}
+$("tdChips").addEventListener("click", e=>{ const t = e.target.closest("button"); if(!t) return; tdGroup = t.dataset.g; renderTd(); });
+tdSearch.addEventListener("input", renderTd);
+$("tdList").addEventListener("click", async e=>{
+  const b = e.target.closest("button[data-act]"); if(!b) return;
+  const id = b.closest(".tdc").dataset.id, x = TD.get(id); if(!x) return;
+  const p = pageOfId(idOf(x.s,x.a));
+  if(b.dataset.act==="open") openPage(p);
+  else if(b.dataset.act==="edit"){ pendingTdEdit = id; openPage(p); }
+  else if(b.dataset.act==="del"){ if(confirm(`تشيل ${tdRef(x)} من التدبر؟`)){ TD.remove(id); renderTd(); toast("اتشالت من التدبر"); } }
+  else if(b.dataset.act==="copy"){
+    try{ const T = await qtext(); const parts = []; for(let k=x.a;k<=x.b;k++) parts.push(T[x.s-1][k-1] + ` (${ar(k)})`);
+      const txt = `﴿${parts.join(" ")}﴾ [${SURAHS[x.s-1][0]}: ${x.a===x.b ? ar(x.a) : ar(x.a)+"–"+ar(x.b)}]` + (x.note ? `\n\n${x.note}` : "");
+      await navigator.clipboard.writeText(txt); toast("اتنسخت الآية");
+    }catch(err){ toast("ما قدرناش ننسخ"); }
+  }
+});
+
 /* ---------- المزامنة ---------- */
 const SYNC_ON = true;
 const toAr = s => String(s).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
@@ -886,6 +1118,9 @@ function localDoc(){
   const d = { bm: {}, last: null };
   bm.all().forEach(x=>{ d.bm[x.p] = { t: x.t || 1 }; if(x.a) d.bm[x.p].a = x.a; });
   Object.entries(bm.dels()).forEach(([p,t])=>{ if(!d.bm[p] || t > d.bm[p].t) d.bm[p] = { t, d: 1 }; });
+  d.tdb = {};
+  TD.all().forEach(x=>{ d.tdb[x.id] = { t: x.t || 1, s: x.s, a: x.a, b: x.b, n: x.note || "", g: x.g || [] }; });
+  Object.entries(TD.dels()).forEach(([id,t])=>{ if(!d.tdb[id] || t > d.tdb[id].t) d.tdb[id] = { t, d: 1 }; });
   const lp = store.get(), lt = LS.get("mushaf:lastAt", 0);
   if(lp && lt) d.last = { p: lp, t: lt };
   return d;
@@ -896,6 +1131,11 @@ function applyDoc(doc){
   Object.entries(doc.bm).forEach(([p,e])=>{ p = +p; if(e.d) dels[p] = e.t; else keep.push(e.a ? {p, t:e.t, a:e.a} : {p, t:e.t}); });
   keep.sort((a,b)=>b.t-a.t);
   LS.set("mushaf:bm", keep); LS.set("mushaf:bmdel", dels);
+  if(doc.tdb){
+    const tk = [], td = {};
+    Object.entries(doc.tdb).forEach(([id,e])=>{ if(e.d) td[id] = e.t; else tk.push({id, s:e.s, a:e.a, b:e.b, note:e.n||"", g:e.g||[], t:e.t}); });
+    tk.sort((x,y)=>y.t-x.t); LS.set("mushaf:tdb", tk); LS.set("mushaf:tdbdel", td);
+  }
   if(doc.last && doc.last.t > LS.get("mushaf:lastAt", 0)){ LS.set("mushaf:last", doc.last.p); LS.set("mushaf:lastAt", doc.last.t); }
 }
 async function api(body){
@@ -906,9 +1146,10 @@ async function api(body){
 }
 function refreshAfterSync(){
   const h = location.hash;
-  if(!reader.classList.contains("hidden")) setBm(bm.has(current));
+  if(!reader.classList.contains("hidden")){ setBm(bm.has(current)); paintTdBtn(); }
   else if(h==="" || h==="#") renderHome();
   else if(h.startsWith("#bookmarks")) renderBookmarks();
+  else if(h.startsWith("#tadabbur")) renderTd();
   paintSync();
 }
 async function syncNow(){
@@ -974,6 +1215,7 @@ $("syncStop").onclick = ()=>{ if(!confirm("توقف المزامنة على ال
 /* ---------- التنقل ---------- */
 let wasReader = false;
 function showView(name, sub){
+  let pane = "bm"; if(name==="tadabbur"){ name = "bookmarks"; pane = "td"; }
   toast("");
   const fromReader = wasReader; wasReader = false;
   reader.classList.add("hidden"); appEl.classList.remove("hidden"); navEl.classList.remove("hidden");
@@ -988,7 +1230,12 @@ function showView(name, sub){
     if(pendingFocus){ pendingFocus = false; searchEl.focus(); const v = searchEl.value; searchEl.setSelectionRange(v.length, v.length); }
   }
   if(name==="sec"){ if(fromReader && secSearch.value) secSearch.value = ""; openSec(sub); }
-  if(name==="bookmarks") renderBookmarks();
+  if(name==="bookmarks"){
+    $("tabBm").toggleAttribute("aria-current", pane==="bm"); if(pane==="bm") $("tabBm").setAttribute("aria-current","page");
+    $("tabTd").toggleAttribute("aria-current", pane==="td"); if(pane==="td") $("tabTd").setAttribute("aria-current","page");
+    $("paneBm").classList.toggle("hidden", pane!=="bm"); $("paneTd").classList.toggle("hidden", pane!=="td");
+    if(pane==="bm") renderBookmarks(); else { if(fromReader) tdSearch.value = ""; renderTd(); }
+  }
   if(name==="sync"){ paintSync(); if(sub && !syncCode()){ $("syncCode").value = toAr(decodeURIComponent(sub)); } if(syncCode()) syncSoon(200); }
   if(!fromReader) scrollTo(0,0);
 }
@@ -997,7 +1244,7 @@ function route(){
   const m = h.match(/^#page-(\d+)$/);
   if(m){ wasReader = true; show(Math.max(1, Math.min(TOTAL, parseInt(m[1],10)))); return; }
   const [v, sub] = h.replace(/^#/,"").split("/");
-  showView(["index","sec","bookmarks","sync","offline"].includes(v) ? v : "home", sub);
+  showView(["index","sec","bookmarks","tadabbur","sync","offline"].includes(v) ? v : "home", sub);
 }
 window.addEventListener("hashchange", route);
 route();
