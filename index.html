@@ -977,9 +977,9 @@ function pageAyahs(p){ if(p<1 || p>QURAN_PAGES) return []; const a = PAGE_START_
 const esc = x => String(x).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let QTXT = null;
 function qtext(){ if(!QTXT) QTXT = fetch("quran-text.json").then(r=>{ if(!r.ok) throw 0; return r.json(); }).catch(e=>{ QTXT = null; throw e; }); return QTXT; }
-const ayahHTML = (T,s,a,b) => { const h = []; for(let k=a;k<=b;k++) h.push(`${esc(T[s-1][k-1])} <i>﴿${ar(k)}﴾</i>`); return h.join(" "); };
+const ayahHTML = (T,s,a,b) => { const h = []; for(let k=a;k<=b;k++) h.push(`${esc(T[s-1][k-1])} <i>﴿${ar(k)}﴾</i>`); return h.join(" "); };
 const tdId = (s,a,b) => `${s}:${a}-${b}`;
-const tdRef = e => `${SURAHS[e.s-1][0]} · ${e.a===e.b ? ar(e.a) : ar(e.a)+"–"+ar(e.b)}`;
+const tdRef = e => `${SURAHS[e.s-1][0]}، ${e.a===e.b ? "آية "+ar(e.a) : "الآيات "+ar(e.a)+"–"+ar(e.b)}`;
 const TD = {
   all(){ const a = LS.get("mushaf:tdb", []); return Array.isArray(a) ? a.filter(x=>x && x.s && x.a) : []; },
   dels(){ const d = LS.get("mushaf:tdbdel", {}); return d && typeof d==="object" ? d : {}; },
