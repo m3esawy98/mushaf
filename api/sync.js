@@ -18,9 +18,13 @@ function newCode(){
   const r = new Uint32Array(3); require("crypto").webcrypto.getRandomValues(r);
   return `${WORDS[r[0] % WORDS.length]}-${String(r[1] % 10000).padStart(4,"0")}-${WORDS[r[2] % WORDS.length]}`;
 }
+// بيدوّر على بيانات Upstash بأي بادئة (KV_ أو UPSTASH_ أو أي اسم اتكتب وقت الربط)
 function env(){
-  return { url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL,
-           token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN };
+  const E = process.env, keys = Object.keys(E);
+  const pick = re => { const k = keys.find(k => re.test(k) && E[k]); return k ? E[k] : undefined; };
+  const url = E.KV_REST_API_URL || E.UPSTASH_REDIS_REST_URL || pick(/(^|_)(KV_REST_API_URL|REDIS_REST_URL|REST_API_URL)$/);
+  const token = E.KV_REST_API_TOKEN || E.UPSTASH_REDIS_REST_TOKEN || pick(/(^|_)(KV_REST_API_TOKEN|REDIS_REST_TOKEN|REST_API_TOKEN)$/);
+  return { url, token };
 }
 async function redis(cmd){
   const { url, token } = env();
@@ -56,6 +60,13 @@ const KEY = c => "mushaf:sync:" + c;
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   const { url, token } = env();
+  if(req.method === "GET" && req.query && req.query.check !== undefined){
+    // فحص: بيرجّع أسماء المتغيرات بس، من غير قيمها
+    const names = Object.keys(process.env).filter(k => /KV|REDIS|UPSTASH|STORAGE/i.test(k)).sort();
+    let ping = null;
+    if(url && token){ try{ ping = await redis(["PING"]); }catch(e){ ping = "error"; } }
+    return res.json({ configured: !!(url && token), ping, env_names: names });
+  }
   if(!url || !token) return res.status(503).json({ error: "not_configured" });
   try{
     if(req.method === "GET"){
