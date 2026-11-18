@@ -1,8 +1,8 @@
 // Service worker: يخلي التطبيق يفتح بدون إنترنت ويحفظ صفحات المصحف على الجهاز
-const SHELL = "mushaf-shell-v2";
+const SHELL = "mushaf-shell-v3";
 const PAGES = "mushaf-pages-v2";   // غيّر الرقم لو صور الصفحات اتغيرت
 const FONTS = "mushaf-fonts-v1";
-const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./favicon.png"];
+const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./favicon.png", "./qrcode.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));

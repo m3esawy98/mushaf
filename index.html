@@ -203,6 +203,20 @@
     display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:#2a2418;color:#fff;font-size:14px;white-space:nowrap;z-index:20;transition:opacity .2s,transform .2s}
   .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
   .toast a{color:#d6b468;font-weight:600;margin-right:4px}
+  /* sync */
+  .syncchip{display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:999px;background:var(--card);color:var(--muted);font-size:12px;font-weight:600}
+  .syncchip.on{background:var(--accent-soft);color:var(--accent)}
+  .codein{height:48px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 14px;font-size:16px;text-align:center;letter-spacing:1px;outline:none}
+  .codein:focus{border-color:var(--accent)}
+  .err{font-size:12px;color:#9b3a2a}
+  .codebig{font-size:28px;font-weight:600;color:var(--accent);letter-spacing:1px}
+  .qr{width:184px;height:184px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;padding:10px}
+  .qr svg,.qr img{width:100%;height:100%}
+  .sstat{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--accent)}
+  .sstat i{width:8px;height:8px;border-radius:50%;background:#2f8a63}
+  .sstat.bad{color:#9b3a2a}.sstat.bad i{background:#c0533b}
+  .warn{background:#fbf3e2;border-radius:16px;padding:12px 14px;font-size:12px;color:#6b5636;line-height:1.7;margin-bottom:8px}
+  .wstop{display:block;margin:0 auto;border:0;background:transparent;color:#9b3a2a;font-size:14px;padding:8px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -303,7 +317,9 @@
 
   <!-- ===== العلامات ===== -->
   <section class="view hidden" id="v-bookmarks" aria-label="العلامات">
-    <div class="top"><h1 class="title1">العلامات</h1><span style="font-size:14px;color:var(--muted)" id="bmCount"></span></div>
+    <div class="top"><h1 class="title1">العلامات</h1>
+      <span style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;color:var(--muted)" id="bmCount"></span>
+      <a class="syncchip press" href="#sync" id="syncChip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20v-4h-4"/></svg><span id="syncChipTxt">مزامنة</span></a></span></div>
     <p class="lead">احفظ أي صفحة من زرار العلامة وانت بتقرا.</p>
     <div class="bmlist" id="bmList"></div>
     <div class="emptybox hidden" id="bmEmpty">
@@ -311,6 +327,52 @@
       <b>احفظ أول علامة</b>
       <p>افتح أي صفحة ودوس على زرار العلامة اللي فوق، وهتلاقيها هنا.</p>
       <a class="btn press" href="#index/surahs" style="margin-top:6px">افتح الفهرس</a>
+    </div>
+  </section>
+
+  <!-- ===== المزامنة ===== -->
+  <section class="view hidden" id="v-sync" aria-label="المزامنة">
+    <div class="sechead">
+      <a class="back press" href="#bookmarks" aria-label="رجوع للعلامات"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <h1>المزامنة</h1>
+    </div>
+    <p class="lead" style="margin-top:8px;line-height:1.7">علاماتك وآخر صفحة قريتها تبقى واحدة على كل أجهزتك، من غير حساب ولا باسورد.</p>
+    <div id="syncNA" class="ocard hidden">
+      <div class="hd"><span class="ic" style="background:var(--gold-soft);color:var(--gold-ink)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
+        <span><b>مش متاحة هنا</b><small id="syncNAtxt">المزامنة بتشتغل في نسخة الموقع.</small></span></div>
+    </div>
+    <div id="syncOff" class="hidden">
+      <div class="ocard">
+        <div class="hd"><span class="ic" style="background:var(--accent-soft);color:var(--accent)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20v-4h-4"/></svg></span>
+          <span><b>أول جهاز؟</b><small>هنعملك كود تستخدمه على أجهزتك التانية</small></span></div>
+        <button class="btn press" id="syncCreate">فعّل المزامنة</button>
+      </div>
+      <div class="ocard">
+        <b class="h" style="font-size:16px;font-weight:600">عندك كود من جهاز تاني؟</b>
+        <label for="syncCode" style="font-size:12px;font-weight:600;color:var(--muted)">كود المزامنة</label>
+        <input id="syncCode" class="codein" placeholder="نور-٤٨٢٩-قمر" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <span class="err hidden" id="syncErr"></span>
+        <button class="btn press" id="syncJoin">اربط الجهاز</button>
+        <p>أو صوّر الـ QR اللي على الجهاز التاني بكاميرا الموبايل، وهيفتحلك الصفحة دي والكود مكتوب.</p>
+      </div>
+    </div>
+    <div id="syncOn" class="hidden">
+      <div class="ocard" style="align-items:center;text-align:center">
+        <span style="align-self:stretch;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span class="sstat" id="syncStat"><i></i><span>المزامنة شغالة</span></span>
+          <span style="font-size:12px;color:var(--muted)" id="syncAt"></span>
+        </span>
+        <span style="font-size:12px;color:var(--muted)">كود المزامنة بتاعك</span>
+        <span class="h codebig" id="syncShow"></span>
+        <div class="qr" id="syncQr" aria-label="QR code لربط جهاز تاني"></div>
+        <p>على الجهاز التاني: صوّر الـ QR بكاميرا الموبايل، أو افتح العلامات ← مزامنة ← «عندك كود؟» واكتب الكود.</p>
+        <div style="align-self:stretch;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn ghost press" id="syncCopy" style="font-size:14px">انسخ الكود</button>
+          <button class="btn ghost press" id="syncNow" style="font-size:14px">زامن دلوقتي</button>
+        </div>
+      </div>
+      <div class="warn">خلي الكود معاك ومتبعتهوش لحد، لأن أي حد معاه الكود يقدر يشوف علاماتك.</div>
+      <button class="wstop" id="syncStop">إيقاف المزامنة على الجهاز ده</button>
     </div>
   </section>
 
@@ -498,14 +560,17 @@ const LS = {
 };
 const store = {
   get(){ const v = LS.get("mushaf:last", 0); return parseInt(v,10)||0; },
-  set(p){ LS.set("mushaf:last", p); LS.set("mushaf:lastAt", Date.now()); }
+  set(p){ LS.set("mushaf:last", p); LS.set("mushaf:lastAt", Date.now()); syncSoon(8000); }
 };
 const bm = {
   all(){ const a = LS.get("mushaf:bm", []); return Array.isArray(a) ? a.filter(x=>x && x.p) : []; },
   has(p){ return this.all().some(x=>x.p===p); },
+  dels(){ const d = LS.get("mushaf:bmdel", {}); return d && typeof d==="object" ? d : {}; },
   toggle(p){ let a = this.all(); const on = a.some(x=>x.p===p);
-    a = on ? a.filter(x=>x.p!==p) : [{p, t:Date.now()}, ...a]; LS.set("mushaf:bm", a); return !on; },
-  remove(p){ LS.set("mushaf:bm", this.all().filter(x=>x.p!==p)); }
+    if(on) this.remove(p);
+    else { LS.set("mushaf:bm", [{p, t:Date.now()}, ...a]); const d = this.dels(); delete d[p]; LS.set("mushaf:bmdel", d); syncSoon(); }
+    return !on; },
+  remove(p){ LS.set("mushaf:bm", this.all().filter(x=>x.p!==p)); const d = this.dels(); d[p] = Date.now(); LS.set("mushaf:bmdel", d); syncSoon(); }
 };
 
 /* ---------- الوقت ---------- */
@@ -807,14 +872,110 @@ stage.addEventListener("touchend", e=>{
   else if(Math.abs(dx)<10 && Math.abs(dy)<10 && Date.now()-st<300){ reader.classList.toggle("immersive"); }
 }, {passive:true});
 
+
+/* ---------- المزامنة ---------- */
+const SYNC_ON = true;
+const toAr = s => String(s).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+const syncCode = () => LS.get("mushaf:sync", null);
+let syncT = 0, syncBusy = false, syncErr = "";
+function syncSoon(ms){ if(!SYNC_ON || !syncCode()) return; clearTimeout(syncT); syncT = setTimeout(syncNow, ms || 1500); }
+function localDoc(){
+  const d = { bm: {}, last: null };
+  bm.all().forEach(x=>{ d.bm[x.p] = { t: x.t || 1 }; if(x.a) d.bm[x.p].a = x.a; });
+  Object.entries(bm.dels()).forEach(([p,t])=>{ if(!d.bm[p] || t > d.bm[p].t) d.bm[p] = { t, d: 1 }; });
+  const lp = store.get(), lt = LS.get("mushaf:lastAt", 0);
+  if(lp && lt) d.last = { p: lp, t: lt };
+  return d;
+}
+function applyDoc(doc){
+  if(!doc || !doc.bm) return;
+  const keep = [], dels = {};
+  Object.entries(doc.bm).forEach(([p,e])=>{ p = +p; if(e.d) dels[p] = e.t; else keep.push(e.a ? {p, t:e.t, a:e.a} : {p, t:e.t}); });
+  keep.sort((a,b)=>b.t-a.t);
+  LS.set("mushaf:bm", keep); LS.set("mushaf:bmdel", dels);
+  if(doc.last && doc.last.t > LS.get("mushaf:lastAt", 0)){ LS.set("mushaf:last", doc.last.p); LS.set("mushaf:lastAt", doc.last.t); }
+}
+async function api(body){
+  const r = await fetch("api/sync", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
+  let j = {}; try{ j = await r.json(); }catch(e){}
+  if(!r.ok) throw new Error(j.error || ("http" + r.status));
+  return j;
+}
+function refreshAfterSync(){
+  const h = location.hash;
+  if(!reader.classList.contains("hidden")) setBm(bm.has(current));
+  else if(h==="" || h==="#") renderHome();
+  else if(h.startsWith("#bookmarks")) renderBookmarks();
+  paintSync();
+}
+async function syncNow(){
+  const code = syncCode(); if(!SYNC_ON || !code || syncBusy) return;
+  syncBusy = true;
+  try{ const j = await api({ code, doc: localDoc() }); applyDoc(j.doc); LS.set("mushaf:syncAt", Date.now()); syncErr = ""; }
+  catch(e){ syncErr = e.message==="not_found" ? "الكود ده اتمسح من السيرفر" : navigator.onLine===false ? "مفيش نت — هتتزامن لما النت يرجع" : "المزامنة ما اشتغلتش — هنحاول تاني"; }
+  syncBusy = false; refreshAfterSync();
+}
+window.addEventListener("online", ()=>syncSoon(500));
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") syncSoon(300); });
+
+let qrLib = null;
+function loadQr(){
+  if(qrLib) return qrLib;
+  qrLib = new Promise((ok, no)=>{ const s = document.createElement("script");
+    s.src = "qrcode.js"; s.onload = ()=>ok(window.qrcode); s.onerror = ()=>{ qrLib = null; no(); };
+    document.head.appendChild(s); });
+  return qrLib;
+}
+function paintSync(){
+  const code = syncCode();
+  const chip = $("syncChip"); chip.classList.toggle("on", !!code); $("syncChipTxt").textContent = code ? "متزامنة" : "مزامنة";
+  if(!$("v-sync") || $("v-sync").classList.contains("hidden")) return;
+  $("syncNA").classList.toggle("hidden", SYNC_ON);
+  $("syncOff").classList.toggle("hidden", !SYNC_ON || !!code);
+  $("syncOn").classList.toggle("hidden", !SYNC_ON || !code);
+  if(!SYNC_ON || !code) return;
+  $("syncShow").textContent = toAr(code);
+  const at = LS.get("mushaf:syncAt", 0);
+  $("syncAt").textContent = at ? "آخر مزامنة: " + when(at) : "";
+  const st = $("syncStat"); st.classList.toggle("bad", !!syncErr); st.querySelector("span").textContent = syncErr || (syncBusy ? "بنزامن…" : "المزامنة شغالة");
+  const link = location.href.split("#")[0] + "#sync/" + encodeURIComponent(code);
+  const box = $("syncQr");
+  if(box.dataset.for !== link){
+    box.dataset.for = link; box.textContent = "";
+    loadQr().then(q=>{ const qr = q(0, "M"); qr.addData(unescape(encodeURIComponent(link))); qr.make(); box.innerHTML = qr.createSvgTag({cellSize:4, margin:0, scalable:true}); })
+      .catch(()=>{ box.textContent = "QR مش متاح دلوقتي"; });
+  }
+}
+function showErr(m){ const e = $("syncErr"); e.textContent = m || ""; e.classList.toggle("hidden", !m); }
+$("syncCode").addEventListener("input", ()=>showErr(""));
+$("syncCreate").onclick = async ()=>{
+  const b = $("syncCreate"); b.disabled = true; b.textContent = "لحظة…";
+  try{ const j = await api({ action:"create", doc: localDoc() }); LS.set("mushaf:sync", j.code); LS.set("mushaf:syncAt", Date.now()); syncErr = ""; paintSync(); toast("المزامنة اشتغلت"); }
+  catch(e){ toast(e.message==="not_configured" ? "السيرفر لسه مش متجهز للمزامنة" : "ما قدرناش نفعّل المزامنة — اتأكد من النت"); }
+  b.disabled = false; b.textContent = "فعّل المزامنة";
+};
+$("syncJoin").onclick = async ()=>{
+  const raw = $("syncCode").value.trim();
+  if(!raw){ showErr("اكتب الكود الأول"); return; }
+  const b = $("syncJoin"); b.disabled = true; b.textContent = "لحظة…";
+  try{ const j = await api({ code: raw, doc: localDoc() }); LS.set("mushaf:sync", j.code); applyDoc(j.doc); LS.set("mushaf:syncAt", Date.now());
+    syncErr = ""; $("syncCode").value = ""; history.replaceState(null, "", "#sync"); paintSync(); toast("الجهاز اتربط ✓"); }
+  catch(e){ showErr(e.message==="not_found" ? "الكود ده مش موجود — اتأكد منه" : e.message==="bad_code" ? "الكود مكتوب غلط — شكله زي: نور-٤٨٢٩-قمر" : "ما قدرناش نربط الجهاز — اتأكد من النت"); }
+  b.disabled = false; b.textContent = "اربط الجهاز";
+};
+$("syncCopy").onclick = async ()=>{ const c = toAr(syncCode()||""); try{ await navigator.clipboard.writeText(c); toast("اتنسخ الكود"); }catch(e){ toast(c); } };
+$("syncNow").onclick = ()=>syncNow();
+$("syncStop").onclick = ()=>{ if(!confirm("توقف المزامنة على الجهاز ده؟ علاماتك هتفضل موجودة عليه.")) return;
+  localStorage.removeItem("mushaf:sync"); syncErr = ""; paintSync(); };
+
 /* ---------- التنقل ---------- */
 let wasReader = false;
 function showView(name, sub){
   toast("");
   const fromReader = wasReader; wasReader = false;
   reader.classList.add("hidden"); appEl.classList.remove("hidden"); navEl.classList.remove("hidden");
-  ["home","index","sec","bookmarks","offline"].forEach(v=>$("v-"+v).classList.toggle("hidden", v!==name));
-  const navName = name==="sec" ? "home" : name;
+  ["home","index","sec","bookmarks","sync","offline"].forEach(v=>$("v-"+v).classList.toggle("hidden", v!==name));
+  const navName = name==="sec" ? "home" : name==="sync" ? "bookmarks" : name;
   document.querySelectorAll(".nav a").forEach(a=>{ if(a.dataset.nav===navName) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
   lastView = location.hash || "#";
   if(name==="home") renderHome();
@@ -825,6 +986,7 @@ function showView(name, sub){
   }
   if(name==="sec"){ if(fromReader && secSearch.value) secSearch.value = ""; openSec(sub); }
   if(name==="bookmarks") renderBookmarks();
+  if(name==="sync"){ paintSync(); if(sub && !syncCode()){ $("syncCode").value = toAr(decodeURIComponent(sub)); } if(syncCode()) syncSoon(200); }
   if(!fromReader) scrollTo(0,0);
 }
 function route(){
@@ -832,10 +994,11 @@ function route(){
   const m = h.match(/^#page-(\d+)$/);
   if(m){ wasReader = true; show(Math.max(1, Math.min(TOTAL, parseInt(m[1],10)))); return; }
   const [v, sub] = h.replace(/^#/,"").split("/");
-  showView(["index","sec","bookmarks","offline"].includes(v) ? v : "home", sub);
+  showView(["index","sec","bookmarks","sync","offline"].includes(v) ? v : "home", sub);
 }
 window.addEventListener("hashchange", route);
 route();
+paintSync(); syncSoon(400);
 
 /* ---------- PWA: التثبيت والقراءة بدون إنترنت ---------- */
 (function(){
