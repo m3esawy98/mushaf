@@ -641,7 +641,7 @@ function renderHome(){
   $("contBtn").onclick = ()=>openPage(last||1);
   const list = bm.all().slice(0, 8);
   $("bmRow").innerHTML = list.map(({p})=>{ const m = pageMeta(p);
-    return `<button class="bmc press" data-page="${p}"><img class="thumb" data-thumb="${p}" alt=""><span class="row"><b>${m.name}</b><small>ص ${ar(p)}</small></span>${p<=QURAN_PAGES ? `<span class="rubl">الربع ${ar(m.rub+1)}</span>` : ""}</button>`; }).join("");
+    return `<button class="bmc press" data-page="${p}"><img class="thumb" data-thumb="${p}" alt=""><span class="row"><b>${m.name}</b><small>ص ${ar(p)}</small></span>${p<=QURAN_PAGES ? `<span class="rubl">الحزب ${ar(m.hizb)} · الربع ${ar(m.rub+1)}</span>` : ""}</button>`; }).join("");
   $("bmRow").classList.toggle("hidden", !list.length);
   $("bmHint").classList.toggle("hidden", !!list.length);
   $("bmAll").classList.toggle("hidden", !list.length);
