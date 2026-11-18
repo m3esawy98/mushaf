@@ -171,7 +171,9 @@
   #reader{position:fixed;inset:0;background:#efe8da;display:flex;flex-direction:column;z-index:10}
   .bar{display:flex;align-items:center;gap:4px;padding:8px 8px;background:rgba(255,253,248,.97);
     border-bottom:1px solid var(--line);transition:transform .2s, opacity .2s;z-index:3}
-  .bar.top{padding-top:calc(8px + env(safe-area-inset-top))}
+  .bar.top{padding-top:calc(8px + env(safe-area-inset-top));position:fixed;top:0;left:0;right:0;background:#fffdf8;z-index:4}
+  #reader{padding-top:var(--bth,64px)}
+  #reader.immersive{padding-top:0}
   .bar.bottom{border-bottom:0;border-top:1px solid var(--line);justify-content:center;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
   .iconbtn{flex:none;border:0;background:transparent;width:44px;height:44px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink)}
   .iconbtn:hover{background:var(--accent-soft)}
@@ -189,7 +191,7 @@
   .goto{display:flex;align-items:center;gap:6px;margin:0 6px}
   .goto input{width:76px;height:40px;text-align:center;padding:6px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:16px}
   .goto span{color:var(--muted);font-size:14px}
-  #reader.immersive .bar.top{transform:translateY(-100%);opacity:0;position:absolute;left:0;right:0;top:0}
+  #reader.immersive .bar.top{transform:translateY(-100%);opacity:0}
   #reader.immersive .bar.bottom{transform:translateY(100%);opacity:0;position:absolute;left:0;right:0;bottom:0}
   .navzone{position:absolute;top:0;bottom:0;width:22%;z-index:2;cursor:pointer}
   .navzone.left{left:0}.navzone.right{right:0}
@@ -893,6 +895,8 @@ function toast(html, ms){
 
 /* ---------- القارئ ---------- */
 const appEl = $("app"), navEl = document.querySelector(".nav"), reader = $("reader");
+{ const tb = reader.querySelector(".bar.top"); const fit = ()=>reader.style.setProperty("--bth", tb.offsetHeight + "px");
+  if(window.ResizeObserver) new ResizeObserver(fit).observe(tb); addEventListener("resize", fit); fit(); }
 const img = $("pageImg"), loading = $("loading");
 const gotoInput = $("gotoInput"), bmBtn = $("bmBtn");
 $("totalLbl").textContent = "من " + ar(TOTAL);
