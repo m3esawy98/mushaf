@@ -201,7 +201,12 @@
   #reader.zoomed #zoomBtn{background:var(--accent-soft)}
   .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,12px);opacity:0;pointer-events:none;
     display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:#2a2418;color:#fff;font-size:14px;white-space:nowrap;z-index:20;transition:opacity .2s,transform .2s}
-  .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast.show a,.toast.show button{pointer-events:auto}
+  .toast button{border:0;background:transparent;color:#d6b468;font:inherit;font-weight:600;padding:4px 6px;margin:-4px 0;cursor:pointer}
+  .gnew{display:flex;gap:8px;margin-top:8px}
+  .gnew input{flex:1;min-width:0;height:40px;border:1px solid var(--line,#e6dccb);border-radius:999px;padding:0 14px;font:inherit;font-size:16px;background:#fff}
+  .gnew button{height:40px;padding:0 16px;border:0;border-radius:999px;background:var(--accent);color:#fff;font:inherit;font-weight:600}
   .toast a{color:#d6b468;font-weight:600;margin-right:4px}
   /* sync */
   .syncchip{display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:999px;background:var(--card);color:var(--muted);font-size:12px;font-weight:600}
@@ -519,6 +524,7 @@
     <div class="prev"><b class="h" id="tdRef"></b><p class="qt" id="tdPrev"></p></div>
     <span class="slbl">المجموعات</span>
     <div class="gchips wrap" id="tdGroups"></div>
+    <div class="gnew hidden" id="tdGNew"><input id="tdGName" maxlength="30" placeholder="اسم المجموعة الجديدة" enterkeyhint="done"><button type="button" id="tdGOk">إضافة</button></div>
     <label class="slbl" for="tdNote">ملاحظتك (اختياري)</label>
     <textarea id="tdNote" rows="2" placeholder="إيه اللي وقفك في الآية دي؟"></textarea>
     <div class="sbtns"><button class="btn press" id="tdSave">حفظ</button><button class="btn ghost press" id="tdCancel">إلغاء</button></div>
@@ -879,10 +885,10 @@ $("bmList").addEventListener("click", e=>{
 
 /* ---------- رسالة صغيرة ---------- */
 let toastT = 0;
-function toast(html){
+function toast(html, ms){
   if(!html){ $("toast").classList.remove("show"); return; }
   const t = $("toast"); t.innerHTML = html; t.classList.add("show");
-  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), 2600);
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), ms || 2600);
 }
 
 /* ---------- القارئ ---------- */
@@ -1006,6 +1012,7 @@ function openTd(editId){
   tdFresh = true;
   if(e) loadEntry(e);
   else { tdSel = {s:ay[0][0], a:ay[0][1], b:ay[0][1]}; tdEditId = null; tdGroupsSel = []; $("tdNote").value = ""; }
+  toast(); $("tdGNew").classList.add("hidden"); $("tdGName").value = "";
   tdSheet.classList.remove("hidden"); tdBg.classList.remove("hidden"); paintTdSheet();
 }
 function paintTdSheet(){
@@ -1036,14 +1043,19 @@ $("tdAyahs").addEventListener("click", e=>{
   if(tdFresh || tdSel.a!==tdSel.b || tdSel.s!==s || a===tdSel.a){ tdSel = {s, a, b:a}; tdFresh = false; } else tdSel.b = a;
   const lo = Math.min(tdSel.a,tdSel.b), hi = Math.max(tdSel.a,tdSel.b), ex = TD.get(tdId(s,lo,hi));
   if(ex) loadEntry(ex);
+  else if(tdEditId){ tdEditId = null; tdGroupsSel = []; $("tdNote").value = ""; }
   paintTdSheet();
 });
 $("tdGroups").addEventListener("click", e=>{
   const t = e.target.closest("button"); if(!t) return;
-  if(t.id==="tdAddG"){ const n = (prompt("اسم المجموعة الجديدة") || "").trim().slice(0,30); if(!n) return; TD.addGroup(n); if(!tdGroupsSel.includes(n)) tdGroupsSel.push(n); paintTdSheet(); return; }
+  if(t.id==="tdAddG"){ $("tdGNew").classList.remove("hidden"); $("tdGName").focus(); return; }
   const n = t.dataset.g; tdGroupsSel = tdGroupsSel.includes(n) ? tdGroupsSel.filter(x=>x!==n) : [...tdGroupsSel, n];
   t.setAttribute("aria-pressed", tdGroupsSel.includes(n));
 });
+function addGroupInline(){ const n = $("tdGName").value.trim().slice(0,30); $("tdGName").value = ""; $("tdGNew").classList.add("hidden"); if(!n) return;
+  TD.addGroup(n); if(!tdGroupsSel.includes(n)) tdGroupsSel.push(n); paintTdSheet(); }
+$("tdGOk").onclick = addGroupInline;
+$("tdGName").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addGroupInline(); } });
 $("tdSave").onclick = ()=>{
   const {s, a, b} = tdSel, lo = Math.min(a,b), hi = Math.max(a,b), id = tdId(s,lo,hi);
   if(tdEditId && tdEditId!==id) TD.remove(tdEditId);
@@ -1054,11 +1066,17 @@ $("tdCancel").onclick = closeTd;
 tdBg.onclick = closeTd;
 $("tdDel").onclick = ()=>{
   const {s, a, b} = tdSel, id = tdEditId || tdId(s, Math.min(a,b), Math.max(a,b));
-  if(!confirm("تشيل الآيات دي من التدبر؟ ملاحظتك هتتمسح.")) return;
-  TD.remove(id); closeTd(); toast("اتشالت من التدبر");
+  closeTd(); tdRemoveUndo(id);
 };
 tdBtn.onclick = ()=>openTd();
 let pendingTdEdit = null;
+function tdRemoveUndo(id){
+  const old = TD.get(id); if(!old) return;
+  TD.remove(id);
+  toast(`اتشالت ${tdRef(old)} <button type="button" id="tdUndo">تراجع</button>`, 5000);
+  $("tdUndo").onclick = ()=>{ TD.save({...old}); toast("رجعت ✓");
+    if(!reader.classList.contains("hidden")) paintTdBtn(); else if(location.hash.startsWith("#tadabbur")) renderTd(); };
+}
 
 /* صفحة التدبر */
 let tdGroup = "الكل";
@@ -1099,7 +1117,7 @@ $("tdList").addEventListener("click", async e=>{
   const p = pageOfId(idOf(x.s,x.a));
   if(b.dataset.act==="open") openPage(p);
   else if(b.dataset.act==="edit"){ pendingTdEdit = id; openPage(p); }
-  else if(b.dataset.act==="del"){ if(confirm(`تشيل ${tdRef(x)} من التدبر؟`)){ TD.remove(id); renderTd(); toast("اتشالت من التدبر"); } }
+  else if(b.dataset.act==="del"){ tdRemoveUndo(id); renderTd(); }
   else if(b.dataset.act==="copy"){
     try{ const T = await qtext(); const parts = []; for(let k=x.a;k<=x.b;k++) parts.push(T[x.s-1][k-1] + ` (${ar(k)})`);
       const txt = `﴿${parts.join(" ")}﴾ [${SURAHS[x.s-1][0]}: ${x.a===x.b ? ar(x.a) : ar(x.a)+"–"+ar(x.b)}]` + (x.note ? `\n\n${x.note}` : "");
