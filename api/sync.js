@@ -61,7 +61,7 @@ function backend(){
   return null;
 }
 function clean(doc){
-  const out = { bm: {}, last: null };
+  const out = { bm: {}, tdb: {}, last: null };
   if(doc && typeof doc.bm === "object"){
     for(const [k, v] of Object.entries(doc.bm).slice(0, 2000)){
       const p = parseInt(k, 10), t = Number(v && v.t);
@@ -72,12 +72,24 @@ function clean(doc){
       out.bm[p] = e;
     }
   }
+  if(doc && doc.tdb && typeof doc.tdb === "object"){
+    for(const [k, v] of Object.entries(doc.tdb).slice(0, 3000)){
+      const m = /^(\d{1,3}):(\d{1,3})-(\d{1,3})$/.exec(k), t = Number(v && v.t);
+      if(!m || !(t > 0)) continue;
+      const s = +m[1], a = +m[2], b = +m[3];
+      if(s < 1 || s > 114 || a < 1 || b < a || b > 286) continue;
+      if(v.d){ out.tdb[k] = { t: Math.floor(t), d: 1 }; continue; }
+      const g = Array.isArray(v.g) ? v.g.filter(x => typeof x === "string" && x.trim()).slice(0, 10).map(x => x.trim().slice(0, 30)) : [];
+      out.tdb[k] = { t: Math.floor(t), s, a, b, n: typeof v.n === "string" ? v.n.slice(0, 2000) : "", g };
+    }
+  }
   if(doc && doc.last){ const p = parseInt(doc.last.p, 10), t = Number(doc.last.t);
     if(p >= 1 && p <= 608 && t > 0) out.last = { p, t: Math.floor(t) }; }
   return out;
 }
 function merge(a, b){
-  const out = { bm: { ...a.bm }, last: a.last };
+  const out = { bm: { ...a.bm }, tdb: { ...(a.tdb || {}) }, last: a.last };
+  for(const [k, e] of Object.entries(b.tdb || {})) if(!out.tdb[k] || e.t > out.tdb[k].t) out.tdb[k] = e;
   for(const [p, e] of Object.entries(b.bm)) if(!out.bm[p] || e.t > out.bm[p].t) out.bm[p] = e;
   if(b.last && (!out.last || b.last.t > out.last.t)) out.last = b.last;
   return out;
