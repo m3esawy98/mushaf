@@ -220,6 +220,15 @@
   .tfb .ft button:hover{background:var(--accent-soft)}
   .tfsur{align-self:center;font-family:var(--head);font-size:14px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 14px;border-radius:999px}
   #tfBtn.on{background:var(--accent-soft);color:var(--accent)}
+  .auddbg{background:#1f2a26;color:#e8efe9;font-size:12px;max-height:38vh;overflow:auto;padding:8px 10px;z-index:3}
+  .auddbg .dh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .auddbg .dh b{font-size:13px}
+  .auddbg .dh span{flex:1;min-width:0;color:#b9d3c5}
+  .auddbg button{border:0;border-radius:8px;background:#3a4c45;color:#fff;font:inherit;padding:5px 10px}
+  .auddbg table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  .auddbg th,.auddbg td{padding:3px 4px;text-align:center;border-bottom:1px solid #33433d;white-space:nowrap}
+  .auddbg td.bad{color:#ffb4a0;font-weight:600}
+  #reader.immersive .auddbg{display:none}
   #reader.immersive .bar.top{transform:translateY(-100%);opacity:0}
   #reader.immersive .bar.bottom{transform:translateY(100%);opacity:0;position:absolute;left:0;right:0;bottom:0}
   .navzone{position:absolute;top:0;bottom:0;width:22%;z-index:2;cursor:pointer}
@@ -534,6 +543,10 @@
     <img id="pageImg" alt="">
     <div class="navzone left" id="zoneLeft" title="الصفحة التالية"></div>
     <div class="navzone right" id="zoneRight" title="الصفحة السابقة"></div>
+  </div>
+  <div class="auddbg hidden" id="audDbg">
+    <div class="dh"><b>قياس السكتات</b><span id="dbgSum"></span><button type="button" id="dbgCopy">نسخ النتايج</button><button type="button" id="dbgClear">مسح</button></div>
+    <table><thead><tr><th>الآية</th><th>سكتة</th><th>تحميل</th><th>صمت أول</th><th>صمت آخر</th></tr></thead><tbody id="dbgRows"></tbody></table>
   </div>
   <div class="player hidden" id="player" role="region" aria-label="مشغّل التلاوة">
     <button class="iconbtn" id="audClose" aria-label="إيقاف التلاوة وقفل المشغّل"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -1178,6 +1191,64 @@ $("tdList").addEventListener("click", async e=>{
 });
 
 
+
+/* ---------- وضع قياس السكتات (يتفعّل بـ ?audiotest ويتقفل بـ ?audiotest=0) ---------- */
+const AUD_DBG = (()=>{ const q = new URLSearchParams(location.search).get("audiotest");
+  if(q!==null) LS.set("mushaf:auddbg", q!=="0"); return !!LS.get("mushaf:auddbg", false); })();
+const DBG = { rows: [], cur: null, endedAt: 0, ctx: null };
+function dbgStart(it, url){
+  if(DBG.cur && !DBG.cur.done) DBG.cur.skipped = true;
+  const r = { lbl: (it.bism ? "بسملة " : "") + saOf(it.id).join(":"), t0: performance.now(), gap: null, load: null, lead: null, trail: null, cors: null,
+    after: DBG.endedAt && performance.now() - DBG.endedAt < 2000 ? DBG.endedAt : 0 };
+  DBG.cur = r; DBG.rows.unshift(r); if(DBG.rows.length > 60) DBG.rows.pop();
+  dbgSilence(r, url); dbgPaint();
+}
+function dbgPlaying(){ const r = DBG.cur; if(!r || r.load!==null) return; const now = performance.now();
+  r.load = Math.round(now - r.t0); if(r.after) r.gap = Math.round(now - r.after); r.done = true; dbgPaint(); }
+function dbgEnded(){ DBG.endedAt = performance.now(); }
+async function dbgSilence(r, url){
+  try{
+    const res = await fetch(url, { mode: "cors", cache: "force-cache" }); if(!res.ok) throw 0;
+    const buf = await res.arrayBuffer(); r.cors = true;
+    DBG.ctx = DBG.ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const ab = await new Promise((ok, no)=>DBG.ctx.decodeAudioData(buf, ok, no));
+    const d = ab.getChannelData(0), th = 0.004, sr = ab.sampleRate;   // حوالي -48 ديسيبل
+    let i = 0; while(i < d.length && Math.abs(d[i]) < th) i++;
+    let j = d.length - 1; while(j > i && Math.abs(d[j]) < th) j--;
+    r.lead = Math.round(i / sr * 1000); r.trail = Math.round((d.length - 1 - j) / sr * 1000); r.dur = Math.round(ab.duration * 1000);
+  }catch(e){ r.cors = false; }
+  dbgPaint();
+}
+const dbgAvg = a => a.length ? Math.round(a.reduce((x,y)=>x+y, 0) / a.length) : "—";
+function dbgSummary(){
+  const R = DBG.rows, gaps = R.map(r=>r.gap).filter(x=>x!=null), loads = R.map(r=>r.load).filter(x=>x!=null);
+  const leads = R.map(r=>r.lead).filter(x=>x!=null), trails = R.map(r=>r.trail).filter(x=>x!=null);
+  return { n: R.length, gapAvg: dbgAvg(gaps), gapMax: gaps.length ? Math.max(...gaps) : "—", loadAvg: dbgAvg(loads),
+    leadAvg: dbgAvg(leads), trailAvg: dbgAvg(trails), cors: R.some(r=>r.cors===true) ? "مسموح" : R.some(r=>r.cors===false) ? "ممنوع" : "—" };
+}
+function dbgPaint(){
+  if(!AUD_DBG) return;
+  $("audDbg").classList.toggle("hidden", !aud && !DBG.rows.length);
+  const s = dbgSummary();
+  $("dbgSum").textContent = `${ar(s.n)} آية · متوسط السكتة ${s.gapAvg} مللي · أقصى ${s.gapMax}`;
+  const c = (v, bad) => v==null ? `<td>—</td>` : `<td class="${bad ? "bad" : ""}">${v}</td>`;
+  $("dbgRows").innerHTML = DBG.rows.map(r=>`<tr><td>${r.lbl}</td>${c(r.gap, r.gap>300)}${c(r.load, r.load>300)}${c(r.lead, r.lead>300)}${c(r.trail, r.trail>300)}</tr>`).join("");
+}
+if(AUD_DBG){
+  $("dbgClear").onclick = ()=>{ DBG.rows = []; DBG.cur = null; dbgPaint(); };
+  $("dbgCopy").onclick = async ()=>{
+    const s = dbgSummary(), standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    const txt = [`قياس السكتات — ${new Date().toLocaleString("ar-EG")}`,
+      `الجهاز: ${navigator.userAgent}`, `مثبّت كتطبيق: ${standalone ? "أيوه" : "لأ"} · المصدر: ${audSrc===0 ? "EveryAyah" : "Quran.com"}`,
+      `عدد الآيات: ${s.n} · متوسط السكتة: ${s.gapAvg} · أقصى سكتة: ${s.gapMax} · متوسط التحميل: ${s.loadAvg}`,
+      `متوسط الصمت في أول الملف: ${s.leadAvg} · في آخره: ${s.trailAvg} · قراءة الملفات من الكود (CORS): ${s.cors}`, "",
+      "الآية | سكتة | تحميل | صمت أول | صمت آخر | طول الملف",
+      ...DBG.rows.slice().reverse().map(r=>[r.lbl, r.gap ?? "—", r.load ?? "—", r.lead ?? "—", r.trail ?? "—", r.dur ?? "—"].join(" | "))].join("\n");
+    try{ await navigator.clipboard.writeText(txt); toast("اتنسخت النتايج — ابعتها في الشات"); }
+    catch(e){ const w = document.createElement("textarea"); w.value = txt; document.body.appendChild(w); w.select(); document.execCommand("copy"); w.remove(); toast("اتنسخت النتايج"); }
+  };
+}
+
 /* ---------- القراءة الصوتية (المنشاوي مرتل) ---------- */
 const pad3 = n => String(n).padStart(3, "0");
 const AUD_SRC = [
@@ -1208,6 +1279,7 @@ function audPlay(it){
   const prevPage = aud ? aud.page : current;
   aud = it; player.classList.add("wait");
   if(!reader.classList.contains("hidden") && it.page!==current && current===prevPage) openPage(it.page);
+  if(AUD_DBG) dbgStart(it, audUrl(it, audSrc));
   audio.src = audUrl(it, audSrc);
   audio.play().catch(err=>{ if(err && err.name==="NotAllowedError"){ player.classList.remove("wait"); paintPlayer(); } });
   paintPlayer();
@@ -1224,10 +1296,10 @@ function audStartPage(p){
   const ay = pageAyahs(p); if(!ay.length) return;
   const id = idOf(...ay[0]); audSrc = audSrc || 0; audPlay(audItem(id, needBism(id)));
 }
-audio.addEventListener("playing", ()=>{ player.classList.remove("wait"); paintPlayer(); });
+audio.addEventListener("playing", ()=>{ player.classList.remove("wait"); paintPlayer(); if(AUD_DBG) dbgPlaying(); });
 audio.addEventListener("pause", paintPlayer);
 audio.addEventListener("waiting", ()=>player.classList.add("wait"));
-audio.addEventListener("ended", ()=>{ if(!aud) return; const nx = audNextItem(aud); if(nx) audPlay(nx); else audStop(); });
+audio.addEventListener("ended", ()=>{ if(AUD_DBG) dbgEnded(); if(!aud) return; const nx = audNextItem(aud); if(nx) audPlay(nx); else audStop(); });
 audio.addEventListener("error", ()=>{
   if(!aud || !audio.getAttribute("src")) return;
   if(audSrc < AUD_SRC.length-1){ audSrc++; audPlay(aud); return; }
