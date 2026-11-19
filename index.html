@@ -956,6 +956,21 @@ function toast(html, ms){
   clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), ms || 2600);
 }
 
+
+/* ---------- الشاشة تفضل منورة في صفحة القراءة (Screen Wake Lock) ---------- */
+var wl = null, wlWant = false, wlBusy = false;
+async function wlGet(){
+  if(!wlWant || wl || wlBusy || !("wakeLock" in navigator) || document.visibilityState!=="visible") return;
+  wlBusy = true;
+  try{ wl = await navigator.wakeLock.request("screen"); wl.addEventListener("release", ()=>{ wl = null; }); if(!wlWant) wakeOff(); }
+  catch(e){ wl = null; }   // ممكن يترفض بعد الرجوع من الشاشة الرئيسية — بنعيد مع أول لمسة
+  finally{ wlBusy = false; }
+}
+function wakeOn(){ wlWant = true; wlGet(); }
+function wakeOff(){ wlWant = false; if(wl){ const w = wl; wl = null; w.release().catch(()=>{}); } }
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") wlGet(); });
+["pointerdown","touchend","keydown"].forEach(ev=>document.addEventListener(ev, ()=>{ if(wlWant && !wl) wlGet(); }, {passive:true}));
+
 /* ---------- القارئ ---------- */
 const appEl = $("app"), navEl = document.querySelector(".nav"), reader = $("reader");
 { const tb = reader.querySelector(".bar.top"); const fit = ()=>reader.style.setProperty("--bth", tb.offsetHeight + "px");
@@ -994,6 +1009,7 @@ function show(p){
   tdSheet.classList.add("hidden"); tdBg.classList.add("hidden");
   if(typeof paintTdBtn==="function") paintTdBtn();
   if(pendingTdEdit){ const id = pendingTdEdit; pendingTdEdit = null; setTimeout(()=>openTd(id), 50); }
+  wakeOn();
   $("playBtn").classList.toggle("hidden", p>QURAN_PAGES);
   if(typeof prefetchTiming==="function" && p<=QURAN_PAGES) prefetchTiming(p);
   $("tfBtn").classList.toggle("hidden", p>QURAN_PAGES);
@@ -1585,6 +1601,7 @@ function showView(name, sub){
   const fromReader = wasReader; wasReader = false;
   reader.classList.add("hidden"); appEl.classList.remove("hidden"); navEl.classList.remove("hidden");
   if(typeof audStop==="function" && aud) audStop();
+  wakeOff();
   ["home","index","sec","bookmarks","sync","offline"].forEach(v=>$("v-"+v).classList.toggle("hidden", v!==name));
   const navName = name==="sec" ? "home" : name==="sync" ? "bookmarks" : name;
   document.querySelectorAll(".nav a").forEach(a=>{ if(a.dataset.nav===navName) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
