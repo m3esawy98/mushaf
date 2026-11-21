@@ -1334,7 +1334,7 @@ const audUrl = (it, src) => it.bism ? AUD_SRC[src](1,1) : AUD_SRC[src](...saOf(i
 function audNextItem(it){ if(it.bism) return audItem(it.id, false); if(it.id>=6236) return null; return audItem(it.id+1, needBism(it.id+1)); }
 function audLabel(it){ const [s,a] = saOf(it.id); return it.bism ? `${SURAHS[s-1][0]}، البسملة` : `${SURAHS[s-1][0]}، آية ${ar(a)}`; }
 function paintPlayer(){
-  const playing = aud && !audio.paused;
+  const playing = aud && (!audio.paused || surBusy);
   $("audPlay").innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
   $("audPlay").setAttribute("aria-label", playing ? "إيقاف مؤقت" : "تشغيل");
   playBtn.classList.toggle("on", !!aud);
@@ -1405,16 +1405,25 @@ function preAt(t, a){
 }
 function surBegin(t, a){ return a===1 ? 0 : preAt(t, a); }
 let surHold = null;   // لحد ما نوصل لبداية الآية، اسم الآية يفضل على الآية الجديدة
+var surBusy = false;   // بنقفز دلوقتي: الزرار يفضل "إيقاف" والتشغيل يستنى لما القفزة تخلص
 function surGo(ms, holdMs){
   surHold = holdMs == null ? null : holdMs;
-  if(audio.readyState < 1){ surSeek = ms; return; }
-  // نكتم الصوت لحظة القفز لحد ما المكان الجديد يجهز، فمايطلعش صوت متلخبط
+  if(audio.readyState < 1){ surSeek = ms; audio.play().catch(()=>{}); return; }
+  // نوقف، نقفز، نستنى المكان الجديد يجهز، وبعدين نشغل. القفز والصوت شغال على الآيفون
+  // بيضيّع أول جزء من الثانية بعد القفزة فأول حرف بيتقطع
+  const my = ++surGoN;
+  surBusy = true; player.classList.add("wait");
+  audio.pause();
   let done = false;
-  const un = ()=>{ if(done) return; done = true; audio.removeEventListener("seeked", un); setTimeout(()=>{ audio.muted = false; }, 60); };
-  audio.muted = true; audio.addEventListener("seeked", un);
-  try{ audio.currentTime = ms / 1000; }catch(e){ un(); }
-  setTimeout(un, 1500);
+  const go = ()=>{ if(done) return; done = true; audio.removeEventListener("seeked", go);
+    if(my !== surGoN) return;
+    surBusy = false; audio.muted = false;
+    audio.play().catch(()=>{ player.classList.remove("wait"); paintPlayer(); }); };
+  audio.addEventListener("seeked", go);
+  try{ audio.currentTime = ms / 1000; }catch(e){ go(); }
+  setTimeout(go, 1500);
 }
+var surGoN = 0;
 function surSeekTo(ms){
   if(audio.readyState >= 1){ try{ audio.currentTime = ms/1000; }catch(e){ surSeek = ms; } } else surSeek = ms;
 }
@@ -1422,15 +1431,15 @@ function surPlay(it){
   const [s, a] = saOf(it.id), my = ++surReq, prevPage = aud ? aud.page : current;
   aud = audItem(it.id, a===1 && s!==1 && s!==9); player.classList.add("wait");
   if(!reader.classList.contains("hidden") && aud.page!==current && current===prevPage) openPage(aud.page);
-  const tm = timingNow(s);
+  const tm = timingNow(s); let jumped = false;
   if(!sur || sur.s!==s){
     const url = tm ? tm.url : SURAH_URL(s);
     sur = { s, url, t: tm ? tm.t : null };
     if(AUD_DBG) dbgStart(audItem(it.id, false), null, "سورة " + s);
     surSeek = tm ? surBegin(tm.t, a) : (a===1 ? 0 : null); surHold = tm && a>1 ? tm.t[a-1][0] : null;
     audio.src = url;
-  } else if(sur.t) surGo(surBegin(sur.t, a), a>1 ? sur.t[a-1][0] : null);
-  audio.play().catch(err=>{ if(err && err.name==="NotAllowedError"){ player.classList.remove("wait"); paintPlayer(); } });
+  } else if(sur.t){ surGo(surBegin(sur.t, a), a>1 ? sur.t[a-1][0] : null); jumped = true; }
+  if(!jumped) audio.play().catch(err=>{ if(err && err.name==="NotAllowedError"){ player.classList.remove("wait"); paintPlayer(); } });
   if(!sur.t){
     timing(s).then(x=>{
       if(my!==surReq || !sur || sur.s!==s) return;
@@ -1466,7 +1475,6 @@ function surJumpTo(s, a){   // قفز لآية في نفس السورة مع ا�
   aud = audItem(id, false);
   if(!reader.classList.contains("hidden") && aud.page!==current && current===prevPage) openPage(aud.page);
   surGo(preAt(sur.t, a), sur.t[a-1][0]);
-  if(audio.paused) audio.play().catch(()=>{});
   paintPlayer(); audMeta(aud); if(typeof tfFocus==="function") tfFocus(id, true);
 }
 function audPlay(it){ if(surahMode && (!REC().ayah || !SUR_BAD.has(saOf(it.id)[0]))) surPlay(it); else { sur = null; ayahPlay(it); } }
@@ -1486,7 +1494,7 @@ $("audRec").onclick = e=>{ e.stopPropagation(); $("recMenu").classList.toggle("h
 $("recMenu").addEventListener("click", e=>{ const b = e.target.closest("button[data-rec]"); if(!b) return; $("recMenu").classList.add("hidden"); setRec(b.dataset.rec); });
 document.addEventListener("click", e=>{ if(!e.target.closest("#recMenu,#audRec")) $("recMenu").classList.add("hidden"); });
 paintRec();
-function audStop(){ surReq++; sur = null; surSeek = null; surHold = null; audio.muted = false; audio.pause(); audio.removeAttribute("src"); try{ audio.load(); }catch(e){} aud = null; audPre = null; player.classList.remove("wait"); paintPlayer(); }
+function audStop(){ surReq++; surGoN++; surBusy = false; sur = null; surSeek = null; surHold = null; audio.muted = false; audio.pause(); audio.removeAttribute("src"); try{ audio.load(); }catch(e){} aud = null; audPre = null; player.classList.remove("wait"); paintPlayer(); }
 function audStartPage(p){
   const ay = pageAyahs(p); if(!ay.length) return;
   const id = idOf(...ay[0]); audSrc = audSrc || 0; audPlay(audItem(id, needBism(id)));
