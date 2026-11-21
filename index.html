@@ -249,12 +249,11 @@
   .player .pmain:hover{background:var(--accent)}
   .player.wait .pmain{opacity:.6}
   #playBtn.on{background:var(--accent-soft);color:var(--accent)}
-  /* المشغّل طاير فوق الشريط اللي تحت، ولما الزراير تختفي ينزل لآخر الشاشة */
-  .player{position:absolute;left:0;right:0;bottom:var(--bbh,64px);border-radius:18px 18px 0 0;box-shadow:0 -4px 18px rgba(0,0,0,.08)}
-  /* مكان المشغّل محجوز على طول (حتى وهو مقفول) فالصفحة ماتتحركش لما يظهر أو يختفي */
-  #reader{padding-bottom:calc(var(--bbh,64px) + var(--plh,60px))}
-  .player{transition:transform .2s, opacity .2s}
-  #reader.immersive .player{transform:translateY(calc(100% + var(--bbh,64px)));opacity:0;pointer-events:none}
+  /* المشغّل مدموج في الشريط اللي تحت: وقت التشغيل بياخد مكانه بالظبط (نفس الارتفاع)، وأرقام الصفحات تستخبى لحد ما تقفل الصوت */
+  .player{position:absolute;left:0;right:0;bottom:0;min-height:var(--bbh,64px);padding-bottom:calc(6px + env(safe-area-inset-bottom));z-index:5;transition:transform .2s, opacity .2s}
+  .player:not(.hidden) ~ .bar.bottom{visibility:hidden}
+  #reader{padding-bottom:var(--bbh,64px)}
+  #reader.immersive .player{transform:translateY(100%);opacity:0;pointer-events:none}
   .sheet.tall{height:88%}
   .tftitle{border:0;background:transparent;padding:0;font:inherit;color:inherit;display:flex;align-items:center;gap:4px;align-self:flex-start;cursor:pointer}
   .tftitle svg{color:var(--accent)}
