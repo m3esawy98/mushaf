@@ -1396,14 +1396,18 @@ function surStartMs(t, a){ return a===1 ? 0 : (t[a-1] ? t[a-1][0] : 0); }
 /* هامش قبل الآية عشان أول حرف مايتقطعش: حوالي ٣٠٠ مللي من السكتة اللي قبلها،
    من غير ما نرجع لآخر صوت في الآية اللي قبلها (نسيب ٨٠ مللي أمان) */
 const PRE_MS = 300, PRE_GUARD = 80;
-function preAt(t, a){
+/* لو بننقل والصوت شغال، الآيفون بياخد لحظة لحد ما الصوت يطلع فعلاً بعد القفزة،
+   فبنرجع أكتر جوه السكتة (لحد ٧٥٠ مللي) عشان اللحظة دي تتاكل من السكوت مش من أول حرف */
+const PRE_LIVE = 750;
+function preAt(t, a, preMax){
+  const P = preMax || PRE_MS;
   const st = t[a-1] ? t[a-1][0] : 0;
   const pe = a > 1 && t[a-2] ? t[a-2][1] : null;
-  let pre = PRE_MS;
-  if(pe != null && st - pe > 30) pre = Math.min(PRE_MS, Math.max(0, st - pe - PRE_GUARD));  // سكتة معروفة (الحصري)
+  let pre = P;
+  if(pe != null && st - pe > 30) pre = Math.min(P, Math.max(0, st - pe - PRE_GUARD));  // سكتة معروفة (الحصري)
   return Math.max(0, st - pre);
 }
-function surBegin(t, a){ return a===1 ? 0 : preAt(t, a); }
+function surBegin(t, a, preMax){ return a===1 ? 0 : preAt(t, a, preMax); }
 let surHold = null;   // لحد ما نوصل لبداية الآية، اسم الآية يفضل على الآية الجديدة
 var surBusy = false;   // بنقفز دلوقتي: الزرار يفضل "إيقاف" والتشغيل يستنى لما القفزة تخلص
 function surGo(ms, holdMs){
@@ -1438,7 +1442,7 @@ function surPlay(it){
     if(AUD_DBG) dbgStart(audItem(it.id, false), null, "سورة " + s);
     surSeek = tm ? surBegin(tm.t, a) : (a===1 ? 0 : null); surHold = tm && a>1 ? tm.t[a-1][0] : null;
     audio.src = url;
-  } else if(sur.t){ surGo(surBegin(sur.t, a), a>1 ? sur.t[a-1][0] : null); jumped = true; }
+  } else if(sur.t){ surGo(surBegin(sur.t, a, audio.paused ? 0 : PRE_LIVE), a>1 ? sur.t[a-1][0] : null); jumped = true; }
   if(!jumped) audio.play().catch(err=>{ if(err && err.name==="NotAllowedError"){ player.classList.remove("wait"); paintPlayer(); } });
   if(!sur.t){
     timing(s).then(x=>{
@@ -1474,7 +1478,7 @@ function surJumpTo(s, a){   // قفز لآية في نفس السورة مع ا�
   const id = idOf(s, a), prevPage = aud ? aud.page : current;
   aud = audItem(id, false);
   if(!reader.classList.contains("hidden") && aud.page!==current && current===prevPage) openPage(aud.page);
-  surGo(preAt(sur.t, a), sur.t[a-1][0]);
+  surGo(preAt(sur.t, a, audio.paused ? 0 : PRE_LIVE), sur.t[a-1][0]);
   paintPlayer(); audMeta(aud); if(typeof tfFocus==="function") tfFocus(id, true);
 }
 function audPlay(it){ if(surahMode && (!REC().ayah || !SUR_BAD.has(saOf(it.id)[0]))) surPlay(it); else { sur = null; ayahPlay(it); } }
