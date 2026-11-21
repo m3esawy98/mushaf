@@ -249,6 +249,8 @@
   .player .pmain:hover{background:var(--accent)}
   .player.wait .pmain{opacity:.6}
   #playBtn.on{background:var(--accent-soft);color:var(--accent)}
+  /* طول ما المشغّل ظاهر، زرار التشغيل اللي في الشريط يستخبى (المشغّل فيه زراره) */
+  .player:not(.hidden) ~ .bar.bottom #playBtn{display:none}
   /* المشغّل طاير فوق الشريط اللي تحت، ولما الزراير تختفي ينزل لآخر الشاشة */
   .player{position:absolute;left:0;right:0;bottom:var(--bbh,64px);border-radius:18px 18px 0 0;box-shadow:0 -4px 18px rgba(0,0,0,.08)}
   /* مكان المشغّل محجوز على طول (حتى وهو مقفول) فالصفحة ماتتحركش لما يظهر أو يختفي */
