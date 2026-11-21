@@ -1409,7 +1409,7 @@ function audPlay(it){ if(surahMode && (!REC().ayah || !SUR_BAD.has(saOf(it.id)[0
 
 /* اختيار القارئ */
 function paintRec(){ const r = REC(); $("audRec").innerHTML = `${r.name} · ${r.style} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
-  $("recMenu").innerHTML = Object.entries(RECITERS).map(([k, v])=>`<button type="button" role="menuitemradio" aria-checked="${k===recId}" data-rec="${k}"><b>${v.name}</b><small>${v.style}</small></button>`).join(""); }
+  $("recMenu").innerHTML = Object.entries(RECITERS).map(([k, v])=>`<button type="button" role="menuitemradio" aria-checked="${k===recId}" data-rec="${k}" title="${v.style}"><b>${v.name}</b></button>`).join(""); }
 function setRec(k){
   if(!RECITERS[k] || k===recId) return;
   const at = aud ? aud.id : null, playing = aud && !audio.paused;
