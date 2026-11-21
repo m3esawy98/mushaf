@@ -205,6 +205,14 @@
   .player .pinfo{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.35;padding:0 6px}
   .player .pinfo b{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .player .pinfo small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .player .pinfo{position:relative}
+  .recbtn{align-self:flex-start;max-width:100%;border:0;background:transparent;padding:2px 0;font:inherit;font-size:12px;color:var(--accent);display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  .recmenu{position:absolute;bottom:calc(100% + 10px);right:0;min-width:250px;background:#fffdf8;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.14);padding:6px;z-index:9;display:flex;flex-direction:column;gap:2px}
+  .recmenu button{border:0;background:transparent;text-align:right;font:inherit;padding:9px 12px;border-radius:10px;display:flex;flex-direction:column;gap:1px;cursor:pointer}
+  .recmenu button b{font-size:14px;font-weight:600}
+  .recmenu button small{font-size:12px;color:var(--muted)}
+  .recmenu button[aria-checked="true"]{background:var(--accent-soft)}
+  .recmenu button[aria-checked="true"] b{color:var(--accent)}
   .player .pmain{background:var(--accent);color:#fff;border-radius:999px;width:46px;height:46px}
   .player .pmain:hover{background:var(--accent)}
   .player.wait .pmain{opacity:.6}
@@ -557,7 +565,7 @@
   </div>
   <div class="player hidden" id="player" role="region" aria-label="مشغّل التلاوة">
     <button class="iconbtn" id="audClose" aria-label="إيقاف التلاوة وقفل المشغّل"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <div class="pinfo"><b id="audLbl">…</b><small>محمد صديق المنشاوي · مرتل</small></div>
+    <div class="pinfo"><b id="audLbl">…</b><button type="button" id="audRec" class="recbtn" aria-haspopup="menu" aria-label="اختيار القارئ"></button><div class="recmenu hidden" id="recMenu" role="menu"></div></div>
     <button class="iconbtn" id="audPrev" aria-label="الآية السابقة"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15 5h2v14h-2zM14 12L5 5.5v13z"/></svg></button>
     <button class="iconbtn pmain" id="audPlay" aria-label="إيقاف مؤقت"></button>
     <button class="iconbtn" id="audNext" aria-label="الآية التالية"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h2v14H7zM10 12l9 6.5v-13z"/></svg></button>
@@ -1317,23 +1325,39 @@ function ayahPlay(it){
 }
 function audMeta(it){
   if("mediaSession" in navigator){
-    try{ navigator.mediaSession.metadata = new MediaMetadata({ title: audLabel(it), artist: "محمد صديق المنشاوي", album: "المصحف المرتل",
+    try{ navigator.mediaSession.metadata = new MediaMetadata({ title: audLabel(it), artist: REC().name, album: REC().style,
       artwork: [{ src: "icon-512.png", sizes: "512x512", type: "image/png" }] }); }catch(e){}
   }
 }
 
 /* --- وضع السورة الكاملة: ملف واحد للسورة + توقيت الآيات (من غير سكتات تحميل بين الآيات) --- */
-const SURAH_URL = s => `https://download.quranicaudio.com/qdc/siddiq_minshawi/murattal/${s}.mp3`;
-let surahMode = true;            // محتاج /api/timing — شغال على Vercel بس
+const RECITERS = {
+  minshawi: { name: "محمد صديق المنشاوي", style: "مرتل", ayah: true, api: true,
+    url: s => `https://download.quranicaudio.com/qdc/siddiq_minshawi/murattal/${s}.mp3` },
+  husary_qasr: { name: "محمود خليل الحصري", style: "قصر المنفصل · الإذاعة المصرية", file: "audio/husary_qasr.json",
+    url: s => `https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree_iza3a/${pad3(s)}.mp3` }
+};
+let recId = LS.get("mushaf:reciter", "minshawi"); if(!RECITERS[recId]) recId = "minshawi";
+const REC = () => RECITERS[recId];
+const SURAH_URL = s => REC().url(s);
+let surahMode = REC().api ? true : true;   // المنشاوي: توقيت من /api/timing (Vercel) — الحصري: ملف توقيت مع التطبيق
 const SUR_BAD = new Set(); let sur = null, surSeek = null, surReq = 0;   // sur = {s, url, t}
 const TIM = {};
+const TFILE = {};
 function timing(s){
-  if(!TIM[s]) TIM[s] = fetch(`api/timing?s=${s}`).then(r=>{ if(!r.ok) throw 0; return r.json(); })
-    .then(x=>{ if(!x || !x.url || !Array.isArray(x.t) || !x.t.length) throw 0; TIM[s].v = x; return x; })
-    .catch(e=>{ delete TIM[s]; throw e; });
-  return TIM[s];
+  const rid = recId, key = rid + ":" + s, rc = REC();
+  if(!TIM[key]){
+    const src = rc.file
+      ? (TFILE[rid] = TFILE[rid] || fetch(rc.file).then(r=>{ if(!r.ok) throw 0; return r.json(); }).catch(e=>{ delete TFILE[rid]; throw e; }))
+          .then(all=>({ s, url: rc.url(s), t: all[s] }))
+      : fetch(`api/timing?s=${s}`).then(r=>{ if(!r.ok) throw 0; return r.json(); });
+    TIM[key] = src.then(x=>{ if(!x || !x.url || !Array.isArray(x.t) || !x.t.length) throw 0; TIM[key].v = x; return x; })
+      .catch(e=>{ delete TIM[key]; throw e; });
+  }
+  return TIM[key];
 }
-function timingNow(s){ return TIM[s] && TIM[s].v || null; }
+function timingNow(s){ const k = recId + ":" + s; return TIM[k] && TIM[k].v || null; }
+function audFail(){ audStop(); toast("التلاوة مش متاحة دلوقتي — اتأكد من النت"); }
 function prefetchTiming(p){ if(!surahMode) return; new Set(pageAyahs(p).map(x=>x[0])).forEach(s=>timing(s).catch(()=>{})); }
 function surStartMs(t, a){ return a===1 ? 0 : (t[a-1] ? t[a-1][0] : 0); }
 function surSeekTo(ms){
@@ -1358,7 +1382,7 @@ function surPlay(it){
       sur.t = x.t;
       if(x.url !== sur.url){ sur.url = x.url; surSeek = surStartMs(x.t, a); audio.src = x.url; audio.play().catch(()=>{}); }
       else if(a>1) surSeekTo(surStartMs(x.t, a));
-    }).catch(()=>{ if(my!==surReq) return; SUR_BAD.add(s); sur = null; ayahPlay(audItem(it.id, needBism(it.id))); });
+    }).catch(()=>{ if(my!==surReq) return; if(!REC().ayah) return audFail(); SUR_BAD.add(s); sur = null; ayahPlay(audItem(it.id, needBism(it.id))); });
   }
   paintPlayer(); audMeta(aud);
   if(typeof tfFocus==="function") tfFocus(it.id, true);
@@ -1381,7 +1405,23 @@ audio.addEventListener("timeupdate", ()=>{
   paintPlayer(); audMeta(aud);
   if(!w.bism && typeof tfFocus==="function") tfFocus(id, true);
 });
-function audPlay(it){ if(surahMode && !SUR_BAD.has(saOf(it.id)[0])) surPlay(it); else { sur = null; ayahPlay(it); } }
+function audPlay(it){ if(surahMode && (!REC().ayah || !SUR_BAD.has(saOf(it.id)[0]))) surPlay(it); else { sur = null; ayahPlay(it); } }
+
+/* اختيار القارئ */
+function paintRec(){ const r = REC(); $("audRec").innerHTML = `${r.name} · ${r.style} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
+  $("recMenu").innerHTML = Object.entries(RECITERS).map(([k, v])=>`<button type="button" role="menuitemradio" aria-checked="${k===recId}" data-rec="${k}"><b>${v.name}</b><small>${v.style}</small></button>`).join(""); }
+function setRec(k){
+  if(!RECITERS[k] || k===recId) return;
+  const at = aud ? aud.id : null, playing = aud && !audio.paused;
+  if(aud) audStop();
+  recId = k; LS.set("mushaf:reciter", k); surahMode = REC().api ? true : true; SUR_BAD.clear(); paintRec();
+  if(at && playing) audPlay(audItem(at, needBism(at) && saOf(at)[1]===1));
+  else if(at) audPlay(audItem(at, false));
+}
+$("audRec").onclick = e=>{ e.stopPropagation(); $("recMenu").classList.toggle("hidden"); };
+$("recMenu").addEventListener("click", e=>{ const b = e.target.closest("button[data-rec]"); if(!b) return; $("recMenu").classList.add("hidden"); setRec(b.dataset.rec); });
+document.addEventListener("click", e=>{ if(!e.target.closest("#recMenu,#audRec")) $("recMenu").classList.add("hidden"); });
+paintRec();
 function audStop(){ surReq++; sur = null; surSeek = null; audio.pause(); audio.removeAttribute("src"); try{ audio.load(); }catch(e){} aud = null; audPre = null; player.classList.remove("wait"); paintPlayer(); }
 function audStartPage(p){
   const ay = pageAyahs(p); if(!ay.length) return;
@@ -1395,7 +1435,7 @@ audio.addEventListener("ended", ()=>{ if(AUD_DBG) dbgEnded(); if(!aud) return;
   const nx = audNextItem(aud); if(nx) audPlay(nx); else audStop(); });
 audio.addEventListener("error", ()=>{
   if(!aud || !audio.getAttribute("src")) return;
-  if(surahMode && sur){ SUR_BAD.add(sur.s); sur = null; ayahPlay(audItem(aud.id, needBism(aud.id))); return; }
+  if(surahMode && sur){ if(!REC().ayah) return audFail(); SUR_BAD.add(sur.s); sur = null; ayahPlay(audItem(aud.id, needBism(aud.id))); return; }
   if(audSrc < AUD_SRC.length-1){ audSrc++; audPlay(aud); return; }
   audSrc = 0; audStop(); toast("التلاوة مش متاحة دلوقتي — اتأكد من النت");
 });
