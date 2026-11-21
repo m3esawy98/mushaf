@@ -213,6 +213,15 @@
   .recmenu button small{font-size:12px;color:var(--muted)}
   .recmenu button[aria-checked="true"]{background:var(--accent-soft)}
   .recmenu button[aria-checked="true"] b{color:var(--accent)}
+  .ayahpick{position:absolute;top:var(--bth,64px);left:0;right:0;background:#fffdf8;border-bottom:1px solid var(--line);padding:10px 12px 12px;max-height:45vh;overflow-y:auto;z-index:6;box-shadow:0 10px 24px rgba(0,0,0,.10)}
+  @media (max-width:430px){ .bar.top .iconbtn{width:38px;min-width:38px} .bar.top{gap:2px} .bar.top .title small{font-size:11.5px} }
+  #pickBtn[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent)}
+  .ayahpick .aph{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .ayahpick .aph b{font-size:14px;font-weight:600}
+  .ayahpick .aph button{border:0;background:var(--accent);color:#fff;border-radius:999px;height:34px;padding:0 14px;font:inherit;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer}
+  .ayahpick .ayahs button.now{border-color:transparent;background:var(--accent);color:#fff}
+  .lblbtn{border:0;background:transparent;padding:0;font:inherit;color:inherit;display:flex;align-items:center;gap:4px;min-width:0;max-width:100%;cursor:pointer;text-align:right}
+  .lblbtn b{min-width:0}
   .player .pmain{background:var(--accent);color:#fff;border-radius:999px;width:46px;height:46px}
   .player .pmain:hover{background:var(--accent)}
   .player.wait .pmain{opacity:.6}
@@ -552,6 +561,7 @@
     <div class="title"><b id="rSurah"></b><small id="rMeta"></small></div>
     <button class="iconbtn" id="bmBtn" aria-pressed="false" aria-label="حفظ علامة على الصفحة"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
     <button class="iconbtn" id="tdBtn" aria-label="حفظ آيات للتدبر"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.4 6.1L21 12l-6.6 2.9L12 21l-2.4-6.1L3 12l6.6-2.9z"/></svg></button>
+    <button class="iconbtn" id="pickBtn" aria-label="تشغيل التلاوة من آية تختارها" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11M3 12h8M3 18h8"/><path d="M15 12.5v7l5.5-3.5z" fill="currentColor"/></svg></button>
   </div>
   <div class="stage" id="stage">
     <span class="loading" id="loading">جارٍ التحميل…</span>
@@ -563,9 +573,13 @@
     <div class="dh"><b>قياس السكتات</b><span id="dbgSum"></span><button type="button" id="dbgCopy">نسخ النتايج</button><button type="button" id="dbgClear">مسح</button></div>
     <table><thead><tr><th>الآية</th><th>سكتة</th><th>تحميل</th><th>صمت أول</th><th>صمت آخر</th></tr></thead><tbody id="dbgRows"></tbody></table>
   </div>
+  <div class="ayahpick hidden" id="ayPick" role="dialog" aria-label="اختار الآية اللي تبدأ منها التلاوة">
+    <div class="aph"><b>شغّل التلاوة من آية</b></div>
+    <div class="ayahs" id="ayGrid"></div>
+  </div>
   <div class="player hidden" id="player" role="region" aria-label="مشغّل التلاوة">
     <button class="iconbtn" id="audClose" aria-label="إيقاف التلاوة وقفل المشغّل"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <div class="pinfo"><b id="audLbl">…</b><button type="button" id="audRec" class="recbtn" aria-haspopup="menu" aria-label="اختيار القارئ"></button><div class="recmenu hidden" id="recMenu" role="menu"></div></div>
+    <div class="pinfo"><button type="button" class="lblbtn" id="audLblBtn" aria-label="اختار آية تانية"><b id="audLbl">…</b><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" id="audRec" class="recbtn" aria-haspopup="menu" aria-label="اختيار القارئ"></button><div class="recmenu hidden" id="recMenu" role="menu"></div></div>
     <button class="iconbtn" id="audPrev" aria-label="الآية السابقة"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15 5h2v14h-2zM14 12L5 5.5v13z"/></svg></button>
     <button class="iconbtn pmain" id="audPlay" aria-label="إيقاف مؤقت"></button>
     <button class="iconbtn" id="audNext" aria-label="الآية التالية"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h2v14H7zM10 12l9 6.5v-13z"/></svg></button>
@@ -1032,6 +1046,7 @@ function show(p){
   if(pendingTdEdit){ const id = pendingTdEdit; pendingTdEdit = null; setTimeout(()=>openTd(id), 50); }
   wakeOn();
   $("playBtn").classList.toggle("hidden", p>QURAN_PAGES);
+  $("ayPick").classList.add("hidden"); $("pickBtn").setAttribute("aria-expanded","false"); $("pickBtn").classList.toggle("hidden", p>QURAN_PAGES);
   if(typeof prefetchTiming==="function" && p<=QURAN_PAGES) prefetchTiming(p);
   $("tfBtn").classList.toggle("hidden", p>QURAN_PAGES);
   if(typeof tfOpen==="function" && tfOpen()){ if(p>QURAN_PAGES) closeTf(); else if(tfPage!==p) renderTf(p); }
@@ -1442,8 +1457,26 @@ audio.addEventListener("error", ()=>{
   if(audSrc < AUD_SRC.length-1){ audSrc++; audPlay(aud); return; }
   audSrc = 0; audStop(); toast("التلاوة مش متاحة دلوقتي — اتأكد من النت");
 });
+/* اختيار الآية اللي تبدأ منها التلاوة */
+const ayPick = $("ayPick");
+function closePick(){ ayPick.classList.add("hidden"); $("pickBtn").setAttribute("aria-expanded","false"); }
+function openPick(){
+  const ay = pageAyahs(current); if(!ay.length) return;
+  const multi = new Set(ay.map(x=>x[0])).size > 1; let html = "", lastS = 0;
+  ay.forEach(([s,a])=>{
+    if((multi || a===1) && s!==lastS) html += `<span class="sn">سورة ${SURAHS[s-1][0]}</span>`;
+    lastS = s; const id = idOf(s,a);
+    html += `<button type="button" data-id="${id}" class="${aud && aud.id===id && !aud.bism ? "now" : ""}">${ar(a)}</button>`;
+  });
+  $("ayGrid").innerHTML = html; ayPick.classList.remove("hidden"); $("pickBtn").setAttribute("aria-expanded","true");
+}
+$("ayGrid").addEventListener("click", e=>{ const b = e.target.closest("button[data-id]"); if(!b) return; closePick();
+  const id = +b.dataset.id; audPlay(audItem(id, needBism(id))); });
+$("pickBtn").onclick = e=>{ e.stopPropagation(); if(ayPick.classList.contains("hidden")) openPick(); else closePick(); };
+$("audLblBtn").onclick = e=>{ e.stopPropagation(); if(ayPick.classList.contains("hidden")) openPick(); else closePick(); };
+document.addEventListener("click", e=>{ if(!e.target.closest("#ayPick,#audLblBtn,#pickBtn")) closePick(); });
 playBtn.onclick = ()=>{
-  if(!aud || aud.page!==current){ audStartPage(current); return; }
+  if(!aud || aud.page!==current){ closePick(); audStartPage(current); return; }
   if(audio.paused) audio.play().catch(()=>{}); else audio.pause();
 };
 $("audPlay").onclick = ()=>{ if(!aud) return; if(audio.paused) audio.play().catch(()=>{}); else audio.pause(); };
