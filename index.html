@@ -852,11 +852,17 @@ homeSearch.addEventListener("input", ()=>{
   const v = homeSearch.value;
   if(!v) return;
   homeSearch.value = "";
-  // لو بدأ برقم: نخلّي خانة البحث في الفهرس بكيبورد أرقام عشان الكيبورد مايرجعش حروف لما التركيز ينتقل
-  if(/^[0-9٠-٩]/.test(v)) searchEl.setAttribute("inputmode", "numeric"); else searchEl.removeAttribute("inputmode");
   searchEl.value = v;
   pendingFocus = true;
   location.hash = "#index/" + tab;
+});
+// الدوس على خانة البحث في الرئيسية ينقل على طول لخانة بحث الفهرس قبل ما الكيبورد يفتح،
+// فالكيبورد يفتح مرة واحدة على الخانة اللي هتكتب فيها ومايتقلبش لما تكتب (حروف وأرقام زي ما تحب)
+homeSearch.addEventListener("pointerdown", e=>e.preventDefault());
+homeSearch.addEventListener("click", e=>{
+  e.preventDefault();
+  history.pushState(null, "", "#index/" + tab);
+  pendingFocus = true; route();
 });
 
 /* ---------- الفهرس ---------- */
@@ -968,8 +974,7 @@ function setTab(t){
 }
 document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
   history.replaceState(null, "", "#index/" + b.dataset.tab); setTab(b.dataset.tab); }));
-searchEl.addEventListener("input", ()=>{ if(!searchEl.value) searchEl.removeAttribute("inputmode"); render(); });
-searchEl.addEventListener("blur", ()=>{ if(!/^[0-9٠-٩]/.test(searchEl.value)) searchEl.removeAttribute("inputmode"); });
+searchEl.addEventListener("input", render);
 document.addEventListener("click", e=>{
   const t = e.target.closest("[data-page]");
   if(t) openPage(parseInt(t.dataset.page,10));
