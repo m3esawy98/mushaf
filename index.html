@@ -203,9 +203,9 @@
   .bar{display:flex;align-items:center;gap:4px;padding:8px 8px;background:rgba(255,253,248,.97);
     border-bottom:1px solid var(--line);transition:transform .2s, opacity .2s;z-index:3}
   .bar.top{padding-top:max(calc(8px + env(safe-area-inset-top)), var(--edge,0px));position:fixed;top:0;left:0;right:0;background:#fffdf8;z-index:4}
-  #reader{padding-top:var(--bth,64px)}
-  #reader.immersive{padding-top:0}
-  .bar.bottom{border-bottom:0;border-top:1px solid var(--line);justify-content:center;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  /* الشريطين طايرين فوق الصفحة، والصفحة ليها نفس المساحة على طول (مكان الشريطين محجوز) فماتنطش لما الزراير تختفي */
+  #reader{padding-top:var(--bth,64px);padding-bottom:var(--bbh,64px)}
+  .bar.bottom{border-bottom:0;border-top:1px solid var(--line);justify-content:center;padding-bottom:calc(10px + env(safe-area-inset-bottom));position:absolute;left:0;right:0;bottom:0;background:#fffdf8}
   .iconbtn{flex:none;border:0;background:transparent;width:44px;height:44px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink)}
   .iconbtn:hover{background:var(--accent-soft)}
   .iconbtn:disabled{opacity:.3;cursor:default;background:transparent}
@@ -248,7 +248,10 @@
   .player .pmain:hover{background:var(--accent)}
   .player.wait .pmain{opacity:.6}
   #playBtn.on{background:var(--accent-soft);color:var(--accent)}
-  #reader.immersive .player{position:absolute;left:0;right:0;bottom:0;border-radius:18px 18px 0 0;padding-bottom:calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(0,0,0,.08)}
+  /* المشغّل طاير فوق الشريط اللي تحت، ولما الزراير تختفي ينزل لآخر الشاشة */
+  .player{position:absolute;left:0;right:0;bottom:var(--bbh,64px);border-radius:18px 18px 0 0;box-shadow:0 -4px 18px rgba(0,0,0,.08)}
+  /* والمشغّل ظاهر بنحجز مكانه كمان، فمايغطيش الصفحة، وبيفضل في مكانه لما الزراير تختفي عشان الصفحة ماتتحركش */
+  #reader.hasplayer{padding-bottom:calc(var(--bbh,64px) + var(--plh,60px))}
   .sheet.tall{height:88%}
   .tftitle{border:0;background:transparent;padding:0;font:inherit;color:inherit;display:flex;align-items:center;gap:4px;align-self:flex-start;cursor:pointer}
   .tftitle svg{color:var(--accent)}
@@ -282,7 +285,8 @@
   .auddbg td.bad{color:#ffb4a0;font-weight:600}
   #reader.immersive .auddbg{display:none}
   #reader.immersive .bar.top{transform:translateY(-100%);opacity:0}
-  #reader.immersive .bar.bottom{transform:translateY(100%);opacity:0;position:absolute;left:0;right:0;bottom:0}
+  #reader.immersive .bar.bottom{transform:translateY(100%);opacity:0;pointer-events:none}
+  #reader.immersive .bar.top{pointer-events:none}
   .navzone{position:absolute;top:0;bottom:0;width:22%;z-index:2;cursor:pointer}
   .navzone.left{left:0}.navzone.right{right:0}
   @media (hover:none){.navzone{display:none}}
@@ -1043,8 +1047,15 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
 
 /* ---------- القارئ ---------- */
 const appEl = $("app"), navEl = document.querySelector(".nav"), reader = $("reader");
-{ const tb = reader.querySelector(".bar.top"); const fit = ()=>reader.style.setProperty("--bth", tb.offsetHeight + "px");
-  if(window.ResizeObserver) new ResizeObserver(fit).observe(tb, {box:"border-box"}); addEventListener("resize", fit); fit(); }
+{ const tb = reader.querySelector(".bar.top"), bb = reader.querySelector(".bar.bottom");
+  const fit = ()=>{ if(tb.offsetHeight) reader.style.setProperty("--bth", tb.offsetHeight + "px"); if(bb.offsetHeight) reader.style.setProperty("--bbh", bb.offsetHeight + "px"); };
+  if(window.ResizeObserver){ const ro = new ResizeObserver(fit); ro.observe(tb, {box:"border-box"}); ro.observe(bb, {box:"border-box"}); }
+  addEventListener("resize", fit); fit();
+  const pl = $("player");
+  const plFit = ()=>{ const on = !pl.classList.contains("hidden"); if(on && pl.offsetHeight) reader.style.setProperty("--plh", pl.offsetHeight + "px"); reader.classList.toggle("hasplayer", on); };
+  new MutationObserver(plFit).observe(pl, {attributes:true, attributeFilter:["class"]});
+  if(window.ResizeObserver) new ResizeObserver(plFit).observe(pl, {box:"border-box"});
+  plFit(); }
 const img = $("pageImg"), loading = $("loading");
 const gotoInput = $("gotoInput"), bmBtn = $("bmBtn");
 $("totalLbl").textContent = "من " + ar(TOTAL);
@@ -1104,7 +1115,15 @@ $("zoneLeft").onclick = next;   // الكتاب العربي: اليسار = ا�
 $("zoneRight").onclick = prev;
 function setZoom(on){ reader.classList.toggle("zoomed", on); stage.scrollTop = 0; }
 img.addEventListener("dblclick", ()=>setZoom(!reader.classList.contains("zoomed")));
-$("backBtn").onclick = ()=>{ location.hash = lastView; };
+/* الرجوع من المصحف: لو كنت جاي من الفهرس أو البحث نروح للرئيسية، غير كده (العلامات، التدبر…) نرجع مكان ما كنت.
+   ولو نقدر، بنرجع في السجل لحد الشاشة اللي دخلت منها ونبدلها بالرئيسية، فالرجوع بالسحب بعدها مايدخلكش المصحف تاني */
+function readerBack(){
+  const toHome = /^#(index|sec)\b/.test(lastView);
+  const target = toHome ? "#" : lastView;
+  if(viewSeen && rdDepth > 0){ backTo = target; history.go(-rdDepth); }
+  else location.hash = target;
+}
+$("backBtn").onclick = readerBack;
 $("gotoForm").addEventListener("submit", e=>{
   e.preventDefault(); const v=parseInt(gotoInput.value,10); if(v) openPage(v); gotoInput.blur();
 });
@@ -1112,7 +1131,7 @@ document.addEventListener("keydown", e=>{
   if(reader.classList.contains("hidden") || e.target===gotoInput) return;
   if(e.key==="ArrowLeft") next();
   else if(e.key==="ArrowRight") prev();
-  else if(e.key==="Escape") location.hash = lastView;
+  else if(e.key==="Escape") readerBack();
 });
 const stage = $("stage");
 let sx=0, sy=0, st=0, touches=0;
@@ -1855,11 +1874,11 @@ $("syncStop").onclick = ()=>{ if(!confirm("توقف المزامنة على ال
   localStorage.removeItem("mushaf:sync"); syncErr = ""; paintSync(); };
 
 /* ---------- التنقل ---------- */
-let wasReader = false;
+let wasReader = false, viewSeen = false, rdDepth = 0, backTo = null;
 function showView(name, sub){
   let pane = "bm"; if(name==="tadabbur"){ name = "bookmarks"; pane = "td"; }
   toast("");
-  const fromReader = wasReader; wasReader = false;
+  const fromReader = wasReader; wasReader = false; viewSeen = true; rdDepth = 0;
   reader.classList.add("hidden"); appEl.classList.remove("hidden"); navEl.classList.remove("hidden");
   if(typeof audStop==="function" && aud) audStop();
   wakeOff();
@@ -1884,9 +1903,18 @@ function showView(name, sub){
   if(!fromReader) scrollTo(0,0);
 }
 function route(){
+  if(backTo != null && !/^#page-/.test(location.hash)){   // وصلنا للشاشة اللي دخلنا منها: نبدّلها باللي عايزينه
+    const t = backTo; backTo = null;
+    if((location.hash || "#") !== t) history.replaceState(null, "", t === "#" ? location.pathname + location.search : t);
+  } else if(backTo != null && /^#page-/.test(location.hash)) return;   // لسه بنرجع في السجل
   const h = location.hash;
   const m = h.match(/^#page-(\d+)$/);
-  if(m){ wasReader = true; show(Math.max(1, Math.min(TOTAL, parseInt(m[1],10)))); return; }
+  if(m){
+    // بنعدّ صفحات المصحف اللي اتفتحت من ساعة ما دخلنا، عشان الرجوع يعرف يرجع كام خطوة
+    const st = history.state;
+    if(st && st.rd) rdDepth = st.rd;
+    else { rdDepth = (wasReader ? rdDepth : 0) + 1; try{ history.replaceState({rd: rdDepth}, ""); }catch(e){} }
+    wasReader = true; show(Math.max(1, Math.min(TOTAL, parseInt(m[1],10)))); return; }
   const [v, sub] = h.replace(/^#/,"").split("/");
   showView(["index","sec","bookmarks","tadabbur","sync","offline"].includes(v) ? v : "home", sub);
 }
