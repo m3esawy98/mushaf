@@ -622,7 +622,7 @@
   <div class="bar bottom">
     <button class="iconbtn" id="prevBtn" aria-label="الصفحة السابقة"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <form class="goto" id="gotoForm">
-      <label for="gotoInput" style="color:var(--muted);font-size:14px">صفحة</label><input id="gotoInput" type="number" inputmode="numeric" min="1" max="608"><span id="totalLbl"></span>
+      <label for="gotoInput" style="color:var(--muted);font-size:14px">صفحة</label><input id="gotoInput" type="text" inputmode="numeric" maxlength="3" autocomplete="off" enterkeyhint="go" aria-label="رقم الصفحة"><span id="totalLbl"></span>
     </form>
     <button class="iconbtn" id="nextBtn" aria-label="الصفحة التالية"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <span class="vsep" aria-hidden="true"></span>
@@ -1102,7 +1102,7 @@ function show(p){
   if(typeof prefetchTiming==="function" && p<=QURAN_PAGES) prefetchTiming(p);
   $("tfBtn").classList.toggle("hidden", p>QURAN_PAGES);
   if(typeof tfOpen==="function" && tfOpen()){ if(p>QURAN_PAGES) closeTf(); else if(tfPage!==p) renderTf(p); }
-  gotoInput.value = p;
+  gotoInput.value = ar(p);
   $("prevBtn").disabled = p<=1;
   $("nextBtn").disabled = p>=TOTAL;
   store.set(p);
@@ -1130,8 +1130,13 @@ function readerBack(){
   else location.hash = target;
 }
 $("backBtn").onclick = readerBack;
+/* خانة رقم الصفحة: نص بأرقام عربي. أي رقم إنجليزي أو فارسي يتحول عربي وانت بتكتب، وأي حاجة غير الأرقام تتشال */
+const enDigits = s => String(s).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+gotoInput.addEventListener("input", ()=>{ const v = ar(enDigits(gotoInput.value).replace(/\D/g, "").slice(0,3)); if(v !== gotoInput.value) gotoInput.value = v; });
+gotoInput.addEventListener("focus", ()=>gotoInput.select());
+gotoInput.addEventListener("blur", ()=>{ if(!enDigits(gotoInput.value).trim()) gotoInput.value = ar(current); });
 $("gotoForm").addEventListener("submit", e=>{
-  e.preventDefault(); const v=parseInt(gotoInput.value,10); if(v) openPage(v); gotoInput.blur();
+  e.preventDefault(); const v=parseInt(enDigits(gotoInput.value),10); if(v) openPage(v); else gotoInput.value = ar(current); gotoInput.blur();
 });
 document.addEventListener("keydown", e=>{
   if(reader.classList.contains("hidden") || e.target===gotoInput) return;
