@@ -1595,6 +1595,7 @@ audio.addEventListener("timeupdate", ()=>{
   if(audLimit && !audLimitDone){ limitWatch(); if(audLimitDone) return; }
   const w = surWhere(); if(!w) return;
   const id = idOf(sur.s, w.a);
+  if(audLimit && id > audLimit.to) return;   // مع الحد ماننقلش لآية بعده (لا في الاسم ولا في التفسير)
   if(id===aud.id && w.bism===aud.bism) return;
   const prevPage = aud.page; aud = audItem(id, w.bism);
   if(!reader.classList.contains("hidden") && aud.page!==current && current===prevPage) openPage(aud.page);
@@ -1613,7 +1614,7 @@ function surJumpTo(s, a){   // قفز لآية في نفس السورة مع ا�
 var audLimit = null, audLimitDone = false, audLimitT = 0;
 function audLimitSet(l){ audLimit = l || null; audLimitDone = false; clearTimeout(audLimitT); }
 function limitEndMs(){ if(!audLimit || !sur || !sur.t) return null; const [s, a] = saOf(audLimit.to); if(sur.s!==s || !sur.t[a-1]) return null; return sur.t[a-1][1]; }
-function limitHit(){ clearTimeout(audLimitT); audLimitDone = true; audio.pause(); aud = audItem(audLimit.to, false); paintPlayer(); audMeta(aud); }
+function limitHit(){ clearTimeout(audLimitT); audLimitDone = true; audio.pause(); const was = aud && aud.id; aud = audItem(audLimit.to, false); paintPlayer(); audMeta(aud); if(was !== aud.id && typeof tfFocus==="function") tfFocus(aud.id, true); }
 function limitWatch(){   // بنوقف بالظبط عند نهاية آخر آية (timeupdate بييجي كل ربع ثانية، فقرب النهاية بنظبط بمؤقّت)
   clearTimeout(audLimitT);
   if(!audLimit || audLimitDone || audio.paused || surBusy || surHold != null) return;
