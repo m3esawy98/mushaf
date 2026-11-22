@@ -1592,6 +1592,7 @@ audio.addEventListener("loadedmetadata", ()=>{ if(surSeek!=null){ try{ audio.cur
 audio.addEventListener("timeupdate", ()=>{
   if(!surahMode || !sur || !aud) return;
   if(surHold != null){ if(audio.currentTime * 1000 < surHold - 40) return; surHold = null; }
+  if(audLimit && !audLimitDone){ limitWatch(); if(audLimitDone) return; }
   const w = surWhere(); if(!w) return;
   const id = idOf(sur.s, w.a);
   if(id===aud.id && w.bism===aud.bism) return;
@@ -1607,7 +1608,21 @@ function surJumpTo(s, a){   // قفز لآية في نفس السورة مع ا�
   surGo(preAt(sur.t, a, audio.paused ? 0 : PRE_LIVE), sur.t[a-1][0]);
   paintPlayer(); audMeta(aud); if(typeof tfFocus==="function") tfFocus(id, true);
 }
-function audPlay(it){ if(surahMode && (!REC().ayah || !SUR_BAD.has(saOf(it.id)[0]))) surPlay(it); else { sur = null; ayahPlay(it); } }
+/* حد الوقوف: «استماع» من التفسير بيشغّل آيات المقطع بس ويقف في آخرها.
+   audPlay(it, lim): lim = {from, to} يحط حد، null يشيله، ومن غيره (نداء داخلي) الحد يفضل زي ما هو */
+var audLimit = null, audLimitDone = false, audLimitT = 0;
+function audLimitSet(l){ audLimit = l || null; audLimitDone = false; clearTimeout(audLimitT); }
+function limitEndMs(){ if(!audLimit || !sur || !sur.t) return null; const [s, a] = saOf(audLimit.to); if(sur.s!==s || !sur.t[a-1]) return null; return sur.t[a-1][1]; }
+function limitHit(){ clearTimeout(audLimitT); audLimitDone = true; audio.pause(); aud = audItem(audLimit.to, false); paintPlayer(); audMeta(aud); }
+function limitWatch(){   // بنوقف بالظبط عند نهاية آخر آية (timeupdate بييجي كل ربع ثانية، فقرب النهاية بنظبط بمؤقّت)
+  clearTimeout(audLimitT);
+  if(!audLimit || audLimitDone || audio.paused || surBusy || surHold != null) return;
+  const e = limitEndMs(); if(e == null) return;
+  const left = e - audio.currentTime * 1000;
+  if(left <= 15) return limitHit();
+  if(left < 1200) audLimitT = setTimeout(limitWatch, Math.max(10, left - 5));
+}
+function audPlay(it, lim){ if(lim !== undefined) audLimitSet(lim); if(surahMode && (!REC().ayah || !SUR_BAD.has(saOf(it.id)[0]))) surPlay(it); else { sur = null; ayahPlay(it); } }
 
 /* اختيار القارئ */
 function paintRec(){ const r = REC(); $("audRec").title = r.style; $("audRec").innerHTML = `${r.name} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
@@ -1624,15 +1639,16 @@ $("audRec").onclick = e=>{ e.stopPropagation(); $("recMenu").classList.toggle("h
 $("recMenu").addEventListener("click", e=>{ const b = e.target.closest("button[data-rec]"); if(!b) return; $("recMenu").classList.add("hidden"); setRec(b.dataset.rec); });
 document.addEventListener("click", e=>{ if(!e.target.closest("#recMenu,#audRec")) $("recMenu").classList.add("hidden"); });
 paintRec();
-function audStop(){ surReq++; surGoN++; surBusy = false; sur = null; surSeek = null; surHold = null; audio.muted = false; audio.pause(); audio.removeAttribute("src"); try{ audio.load(); }catch(e){} aud = null; audPre = null; player.classList.remove("wait"); paintPlayer(); }
+function audStop(){ audLimitSet(null); surReq++; surGoN++; surBusy = false; sur = null; surSeek = null; surHold = null; audio.muted = false; audio.pause(); audio.removeAttribute("src"); try{ audio.load(); }catch(e){} aud = null; audPre = null; player.classList.remove("wait"); paintPlayer(); }
 function audStartPage(p){
   const ay = pageAyahs(p); if(!ay.length) return;
-  const id = idOf(...ay[0]); audSrc = audSrc || 0; audPlay(audItem(id, needBism(id)));
+  const id = idOf(...ay[0]); audSrc = audSrc || 0; audPlay(audItem(id, needBism(id)), null);
 }
-audio.addEventListener("playing", ()=>{ player.classList.remove("wait"); paintPlayer(); if(AUD_DBG) dbgPlaying(); });
+audio.addEventListener("playing", ()=>{ player.classList.remove("wait"); paintPlayer(); limitWatch(); if(AUD_DBG) dbgPlaying(); });
 audio.addEventListener("pause", paintPlayer);
 audio.addEventListener("waiting", ()=>player.classList.add("wait"));
 audio.addEventListener("ended", ()=>{ if(AUD_DBG) dbgEnded(); if(!aud) return;
+  if(audLimit && !audLimitDone && !aud.bism && aud.id >= audLimit.to){ audLimitDone = true; paintPlayer(); return; }
   if(surahMode && sur){ if(sur.s < 114){ const s = sur.s + 1; sur = null; audPlay(audItem(idOf(s, 1), needBism(idOf(s, 1)))); } else audStop(); return; }
   const nx = audNextItem(aud); if(nx) audPlay(nx); else audStop(); });
 audio.addEventListener("error", ()=>{
@@ -1660,22 +1676,25 @@ function openPick(){
   ayPick.classList.remove("hidden"); $("pickBtn").setAttribute("aria-expanded","true");
 }
 $("ayGrid").addEventListener("click", e=>{ const b = e.target.closest("button[data-id]"); if(!b) return; closePick();
-  const id = +b.dataset.id; audPlay(audItem(id, needBism(id))); });
+  const id = +b.dataset.id; audPlay(audItem(id, needBism(id)), null); });
 $("pickBtn").onclick = e=>{ e.stopPropagation(); if(ayPick.classList.contains("hidden")) openPick(); else closePick(); };
 $("audLblBtn").onclick = e=>{ e.stopPropagation(); if(ayPick.classList.contains("hidden")) openPick(); else closePick(); };
 document.addEventListener("click", e=>{ if(!e.target.closest("#ayPick,#audLblBtn,#pickBtn")) closePick(); });
 playBtn.onclick = ()=>{
   if(!aud || aud.page!==current){ closePick(); audStartPage(current); return; }
-  if(audio.paused) audio.play().catch(()=>{}); else audio.pause();
+  if(audio.paused){ audLimitSet(null); audio.play().catch(()=>{}); } else audio.pause();
 };
-$("audPlay").onclick = ()=>{ if(!aud) return; if(audio.paused) audio.play().catch(()=>{}); else audio.pause(); };
-$("audNext").onclick = ()=>{ if(!aud) return;
+$("audPlay").onclick = ()=>{ if(!aud) return;
+  // بعد ما وقف عند حد التفسير: ▶ يعيد نفس المقطع من أوله ويقف تاني في آخره
+  if(audLimit && audLimitDone && audio.paused){ const l = audLimit; audPlay(audItem(l.from, needBism(l.from)), l); return; }
+  if(audio.paused) audio.play().catch(()=>{}); else audio.pause(); };
+$("audNext").onclick = ()=>{ if(!aud) return; audLimitSet(null);
   if(surahMode && sur){ const [s, a] = saOf(aud.id);
     if(aud.bism){ if(sur.t){ surJumpTo(s, 1); } return; }
     if(sur.t && a < sur.t.length){ surJumpTo(s, a + 1); return; }
     if(s < 114){ sur = null; audPlay(audItem(idOf(s+1, 1), needBism(idOf(s+1, 1)))); } return; }
   const nx = audNextItem(aud); if(nx) audPlay(nx); };
-$("audPrev").onclick = ()=>{ if(!aud) return;
+$("audPrev").onclick = ()=>{ if(!aud) return; audLimitSet(null);
   if(surahMode && sur){ const [s, a] = saOf(aud.id);
     if(aud.bism || a===1){ if(s > 1 && (aud.bism || audio.currentTime < 2)){ const ps = s-1; sur = null; audPlay(audItem(idOf(ps, SURAH_AYAHS[ps-1]), false)); } else { surGo(0, null); } return; }
     if(sur.t) surJumpTo(s, a - 1); return; }
@@ -1684,7 +1703,7 @@ $("audPrev").onclick = ()=>{ if(!aud) return;
 $("audClose").onclick = audStop;
 if("mediaSession" in navigator){
   try{
-    navigator.mediaSession.setActionHandler("play", ()=>audio.play().catch(()=>{}));
+    navigator.mediaSession.setActionHandler("play", ()=>$("audPlay").onclick());
     navigator.mediaSession.setActionHandler("pause", ()=>audio.pause());
     navigator.mediaSession.setActionHandler("nexttrack", ()=>$("audNext").onclick());
     navigator.mediaSession.setActionHandler("previoustrack", ()=>$("audPrev").onclick());
@@ -1743,7 +1762,7 @@ async function renderTf(p){
       <p class="qt">${ayahHTML(T, bk.s, bk.a, bk.b)}</p>
       <div class="tx">${tfFmt(bk.text)}</div>
       <div class="ft"><small>${tdRef({s:bk.s, a:bk.a, b:bk.b})}</small>
-        <button type="button" data-act="play" aria-label="استماع من الآية دي"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>استماع</button>
+        <button type="button" data-act="play" aria-label="استماع للآية دي"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>استماع</button>
         <button type="button" data-act="td" aria-label="حفظ للتدبر"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.4 6.1L21 12l-6.6 2.9L12 21l-2.4-6.1L3 12l6.6-2.9z"/></svg>تدبر</button>
       </div></article>`;
   });
@@ -1775,7 +1794,7 @@ $("tfJump").addEventListener("click", e=>{ const b = e.target.closest("button[da
 tfList.addEventListener("click", e=>{
   const b = e.target.closest("button[data-act]"); if(!b) return;
   const bk = b.closest(".tfb"), s = +bk.dataset.s, a = +bk.dataset.a, bb = +bk.dataset.b;
-  if(b.dataset.act==="play"){ const id = idOf(s, a); audPlay(audItem(id, needBism(id))); tfFocus(id); }
+  if(b.dataset.act==="play"){ const id = idOf(s, a); audPlay(audItem(id, needBism(id)), {from: id, to: idOf(s, bb)}); tfFocus(id); }
   else if(b.dataset.act==="td"){
     closeTf();
     const ex = TD.get(tdId(s, a, bb));
