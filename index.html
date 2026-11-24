@@ -889,6 +889,7 @@ homeSearch.addEventListener("input", ()=>{
 homeSearch.addEventListener("pointerdown", e=>e.preventDefault());
 homeSearch.addEventListener("click", e=>{
   e.preventDefault();
+  searchEl.value = "";   // بحث جديد من الرئيسية: الخانة تبدأ فاضية مش بآخر بحث
   history.pushState(null, "", "#index/" + tab);
   pendingFocus = true; route();
 });
