@@ -2041,7 +2041,10 @@ function route(){
     else { rdDepth = (wasReader ? rdDepth : 0) + 1; try{ history.replaceState({rd: rdDepth}, ""); }catch(e){} }
     wasReader = true; show(Math.max(1, Math.min(TOTAL, parseInt(m[1],10)))); return; }
   const [v, sub] = h.replace(/^#/,"").split("/");
-  showView(["index","sec","bookmarks","tadabbur","sync","offline"].includes(v) ? v : "home", sub);
+  const vv = ["index","sec","bookmarks","tadabbur","sync","offline"].includes(v) ? v : "home";
+  // رجعت للرئيسية: البحث القديم يتمسح، فالفهرس يفتح بعدها فاضي
+  if(vv==="home" && searchEl.value){ searchEl.value = ""; if(typeof render==="function") render(); }
+  showView(vv, sub);
 }
 window.addEventListener("hashchange", route);
 route();
