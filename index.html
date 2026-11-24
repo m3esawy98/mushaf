@@ -202,7 +202,8 @@
 
   /* ---------- Reader ---------- */
   /* وإحنا في المصحف الصفحة اللي ورا مابتتحركش خالص (من غير كده الآيفون بيزق الشاشة كلها لفوق) */
-  html,body{overflow-x:hidden}
+  /* clip مش hidden: hidden على html وbody مع بعض بيخلي الآيفون يعمل body نفسها هي اللي بتتحرك، وساعات الشاشة تطلع فاضية */
+  html,body{overflow-x:clip}
   html.reading, html.reading body{overflow:hidden;height:100%;overscroll-behavior:none}
   /* شريط ثابت تحت ساعة الآيفون: الكلام بيعدّي تحته وهو بيتحرك بدل ما يبان ورا الساعة */
   body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg);z-index:4;pointer-events:none}
@@ -2022,7 +2023,7 @@ function showView(name, sub){
     if(pane==="bm") renderBookmarks(); else { if(fromReader) tdSearch.value = ""; renderTd(); }
   }
   if(name==="sync"){ paintSync(); if(sub && !syncCode()){ $("syncCode").value = toAr(decodeURIComponent(sub)); } if(syncCode()) syncSoon(200); }
-  if(!fromReader) scrollTo(0,0);
+  if(!fromReader){ scrollTo(0,0); document.body.scrollTop = 0; document.documentElement.scrollTop = 0; }
 }
 function route(){
   if(backTo != null && !/^#page-/.test(location.hash)){   // وصلنا للشاشة اللي دخلنا منها: نبدّلها باللي عايزينه
