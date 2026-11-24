@@ -1178,10 +1178,7 @@ document.addEventListener("click", e=>{ if(!e.target.closest("#bmPick,#bmBtn")) 
 /* فتح علامة واقفة عند آية: شريط «وقفت عند آية …» وزرار يكمّل التلاوة منها */
 function bmOpened(p, a){
   const sa = pageAyahs(p)[a-1]; if(!sa) return;
-  setTimeout(()=>{
-    toast(`${BM_ICON} وقفت عند ${SURAHS[sa[0]-1][0]}، آية ${ar(sa[1])} <button type="button" id="bmGo">▶ كمّل من هنا</button>`, 6000);
-    const g = $("bmGo"); if(g) g.onclick = ()=>{ toast(); const id = idOf(sa[0], sa[1]); audPlay(audItem(id, needBism(id)), null); };
-  }, 350);
+  setTimeout(()=>toast(`${BM_ICON} وقفت عند ${SURAHS[sa[0]-1][0]}، آية ${ar(sa[1])}`, 2000), 350);
 }
 ["bmRow","bmList"].forEach(k=>$(k).addEventListener("click", e=>{ const b = e.target.closest("[data-bma]"); if(b) bmOpened(+b.dataset.page, +b.dataset.bma); }));
 
