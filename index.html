@@ -239,6 +239,12 @@
   .ayahpick{position:absolute;bottom:var(--pkb,72px);left:0;right:0;background:#fffdf8;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:12px 12px 12px;max-height:45vh;overflow-y:auto;z-index:6;box-shadow:0 -10px 24px rgba(0,0,0,.10)}
   @media (max-width:430px){ .bar.top .iconbtn{width:38px;min-width:38px} .bar.top{gap:2px} .bar.top .title small{font-size:11.5px} }
   #pickBtn[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent)}
+  /* قائمة العلامة: بتنزل من تحت الشريط اللي فوق، لأن زرار 🔖 فوق */
+  .ayahpick.bmpick{top:var(--bth,64px);bottom:auto;border-top:0;border-bottom:1px solid var(--line);border-radius:0 0 18px 18px;box-shadow:0 10px 24px rgba(0,0,0,.10)}
+  .bmacts{display:flex;gap:6px}
+  .ayahpick .aph button.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+  .ayahpick .ayahs button.sug{border-color:var(--accent);color:var(--accent)}
+  #bmBtn[aria-expanded="true"]{background:var(--accent-soft)}
   .ayahpick .aph{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
   .ayahpick .aph b{font-size:14px;font-weight:600}
   .ayahpick .aph button{border:0;background:var(--accent);color:#fff;border-radius:999px;height:34px;padding:0 14px;font:inherit;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer}
@@ -610,6 +616,10 @@
     <div class="dh"><b>قياس السكتات</b><span id="dbgSum"></span><button type="button" id="dbgCopy">نسخ النتايج</button><button type="button" id="dbgClear">مسح</button></div>
     <table><thead><tr><th>الآية</th><th>سكتة</th><th>تحميل</th><th>صمت أول</th><th>صمت آخر</th></tr></thead><tbody id="dbgRows"></tbody></table>
   </div>
+  <div class="ayahpick bmpick hidden" id="bmPick" role="dialog" aria-label="العلامة: وقفت عند أنهي آية">
+    <div class="aph"><b>وقفت عند آية…</b><span class="bmacts"><button type="button" id="bmPageOnly">الصفحة بس</button><button type="button" id="bmRemove" class="ghost">شيل العلامة</button></span></div>
+    <div class="ayahs" id="bmGrid"></div>
+  </div>
   <div class="ayahpick hidden" id="ayPick" role="dialog" aria-label="اختار الآية اللي تبدأ منها التلاوة">
     <div class="aph"><b>شغّل التلاوة من آية</b></div>
     <div class="ayahs" id="ayGrid"></div>
@@ -799,6 +809,10 @@ const bm = {
     if(on) this.remove(p);
     else { LS.set("mushaf:bm", [{p, t:Date.now()}, ...a]); const d = this.dels(); delete d[p]; LS.set("mushaf:bmdel", d); syncSoon(); }
     return !on; },
+  get(p){ return this.all().find(x=>x.p===p) || null; },
+  // a = ترتيب الآية جوه الصفحة (١ = أول آية في الصفحة)، أو null للصفحة بس
+  set(p, a){ const e = {p, t:Date.now()}; if(a) e.a = a;
+    LS.set("mushaf:bm", [e, ...this.all().filter(x=>x.p!==p)]); const d = this.dels(); delete d[p]; LS.set("mushaf:bmdel", d); syncSoon(); },
   remove(p){ LS.set("mushaf:bm", this.all().filter(x=>x.p!==p)); const d = this.dels(); d[p] = Date.now(); LS.set("mushaf:bmdel", d); syncSoon(); }
 };
 
@@ -866,9 +880,9 @@ function renderHome(){
   }
   $("contBtn").onclick = ()=>openPage(last||1);
   const all = bm.all().slice().sort((x,y)=>(y.t||0)-(x.t||0)), list = all.slice(0, 1);
-  $("bmRow").innerHTML = list.map(({p, t})=>{ const m = pageMeta(p);
-    return `<button class="bmone press" data-page="${p}"><img class="thumb" data-thumb="${p}" alt="">
-      <span class="txt"><b>${m.name}</b><small>${m.m1}</small>${p<=QURAN_PAGES ? `<small>الحزب ${ar(m.hizb)} · الربع ${ar(m.rub+1)}</small>` : ""}${t ? `<em>${when(t)}</em>` : ""}</span>
+  $("bmRow").innerHTML = list.map(x=>{ const {p, t} = x, m = pageMeta(p);
+    return `<button class="bmone press" data-page="${p}"${x.a ? ` data-bma="${x.a}"` : ""}><img class="thumb" data-thumb="${p}" alt="">
+      <span class="txt"><b>${bmTitle(x, m)}</b><small>${m.m1}</small>${p<=QURAN_PAGES ? `<small>الحزب ${ar(m.hizb)} · الربع ${ar(m.rub+1)}</small>` : ""}${t ? `<em>${when(t)}</em>` : ""}</span>
       <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>`; }).join("");
   $("bmRow").classList.toggle("hidden", !list.length);
   $("bmHint").classList.toggle("hidden", !!list.length);
@@ -1011,13 +1025,16 @@ document.addEventListener("click", e=>{
 
 
 /* ---------- العلامات ---------- */
+/* الآية اللي العلامة واقفة عندها: [سورة، آية] أو null */
+function bmAyah(x){ if(!x || !x.a) return null; const ay = pageAyahs(x.p); return ay[x.a-1] || null; }
+function bmTitle(x, m){ const sa = bmAyah(x); return sa ? `${SURAHS[sa[0]-1][0]}، آية ${ar(sa[1])}` : m.name; }
 function renderBookmarks(){
   const list = bm.all();
   $("bmCount").textContent = list.length ? ar(list.length) + (list.length>=3 && list.length<=10 ? " علامات" : " علامة") : "";
   $("bmEmpty").classList.toggle("hidden", !!list.length);
-  $("bmList").innerHTML = list.map(({p,t})=>{ const m = pageMeta(p);
-    return `<div class="bmi"><button class="open press" data-page="${p}"><img class="thumb" data-thumb="${p}" alt="">
-      <span class="t"><span><b>${m.name}</b><i>ص ${ar(p)}</i></span><small>${m.long||""}${p<=QURAN_PAGES ? ` · الربع ${ar(m.rub+1)}` : ""}</small><em>${when(t)}</em></span></button>
+  $("bmList").innerHTML = list.map(x=>{ const {p,t} = x, m = pageMeta(p);
+    return `<div class="bmi"><button class="open press" data-page="${p}"${x.a ? ` data-bma="${x.a}"` : ""}><img class="thumb" data-thumb="${p}" alt="">
+      <span class="t"><span><b>${bmTitle(x, m)}</b><i>ص ${ar(p)}</i></span><small>${m.long||""}${p<=QURAN_PAGES ? ` · الربع ${ar(m.rub+1)}` : ""}</small><em>${when(t)}</em></span></button>
       <button class="del" data-del="${p}" aria-label="إزالة علامة ${m.name} صفحة ${ar(p)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>`; }).join("");
   fillThumbs($("bmList"));
 }
@@ -1078,7 +1095,8 @@ function openPage(p){
 function setBm(on){
   bmBtn.classList.toggle("on", on);
   bmBtn.setAttribute("aria-pressed", on);
-  bmBtn.setAttribute("aria-label", on ? "إزالة العلامة من الصفحة" : "حفظ علامة على الصفحة");
+  bmBtn.setAttribute("aria-label", on ? "تعديل العلامة أو شيلها" : "حفظ علامة: وقفت عند أنهي آية");
+  $("bmPick").classList.add("hidden"); bmBtn.setAttribute("aria-expanded","false");
 }
 function show(p){
   current = p;
@@ -1112,10 +1130,47 @@ function show(p){
   store.set(p);
   preload(p+PER); preload(p-1);
 }
-bmBtn.onclick = ()=>{
-  const on = bm.toggle(current); setBm(on);
-  toast(on ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="#d6b468" stroke="#d6b468" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg> اتحفظت العلامة على صفحة ${ar(current)} <a href="#bookmarks">عرض</a>` : "اتشالت العلامة");
-};
+/* 🔖 بيفتح قائمة «وقفت عند آية…»: تختار الآية فالعلامة تتحفظ بالصفحة والآية */
+const bmPick = $("bmPick");
+const BM_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="#d6b468" stroke="#d6b468" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>`;
+function closeBmPick(){ bmPick.classList.add("hidden"); bmBtn.setAttribute("aria-expanded","false"); }
+function openBmPick(){
+  const ay = pageAyahs(current), cur = bm.get(current);
+  // اقتراح: الآية اللي بتتقري دلوقتي لو في الصفحة دي
+  let sug = 0; if(aud && !aud.bism){ const i = ay.findIndex(([s,a])=>idOf(s,a)===aud.id); if(i>=0) sug = i+1; }
+  const multi = new Set(ay.map(x=>x[0])).size > 1; let html = "", lastS = 0;
+  ay.forEach(([s,a], i)=>{
+    if((multi || a===1) && s!==lastS) html += `<span class="sn">سورة ${SURAHS[s-1][0]}</span>`;
+    lastS = s;
+    const cls = cur && cur.a===i+1 ? "now" : (!(cur && cur.a) && sug===i+1 ? "sug" : "");
+    html += `<button type="button" data-pos="${i+1}" class="${cls}" aria-label="${SURAHS[s-1][0]} آية ${ar(a)}">${ar(a)}</button>`;
+  });
+  $("bmGrid").innerHTML = html;
+  $("bmRemove").classList.toggle("hidden", !cur);
+  $("bmPageOnly").classList.toggle("now", !!cur && !cur.a);
+  closePick();
+  bmPick.classList.remove("hidden"); bmBtn.setAttribute("aria-expanded","true");
+}
+function bmSaved(a){
+  setBm(true); closeBmPick();
+  const sa = a ? pageAyahs(current)[a-1] : null;
+  toast(`${BM_ICON} ${sa ? `اتحفظت العلامة عند ${SURAHS[sa[0]-1][0]}، آية ${ar(sa[1])}` : `اتحفظت العلامة على صفحة ${ar(current)}`} <a href="#bookmarks">عرض</a>`);
+}
+bmBtn.onclick = e=>{ e.stopPropagation(); if(bmPick.classList.contains("hidden")) openBmPick(); else closeBmPick(); };
+$("bmGrid").addEventListener("click", e=>{ const b = e.target.closest("button[data-pos]"); if(!b) return; const a = +b.dataset.pos; bm.set(current, a); bmSaved(a); });
+$("bmPageOnly").onclick = ()=>{ bm.set(current, null); bmSaved(null); };
+$("bmRemove").onclick = ()=>{ bm.remove(current); setBm(false); closeBmPick(); toast("اتشالت العلامة"); };
+document.addEventListener("click", e=>{ if(!e.target.closest("#bmPick,#bmBtn")) closeBmPick(); });
+
+/* فتح علامة واقفة عند آية: شريط «وقفت عند آية …» وزرار يكمّل التلاوة منها */
+function bmOpened(p, a){
+  const sa = pageAyahs(p)[a-1]; if(!sa) return;
+  setTimeout(()=>{
+    toast(`${BM_ICON} وقفت عند ${SURAHS[sa[0]-1][0]}، آية ${ar(sa[1])} <button type="button" id="bmGo">▶ كمّل من هنا</button>`, 6000);
+    const g = $("bmGo"); if(g) g.onclick = ()=>{ toast(); const id = idOf(sa[0], sa[1]); audPlay(audItem(id, needBism(id)), null); };
+  }, 350);
+}
+["bmRow","bmList"].forEach(k=>$(k).addEventListener("click", e=>{ const b = e.target.closest("[data-bma]"); if(b) bmOpened(+b.dataset.page, +b.dataset.bma); }));
 
 const next = ()=>{ if(current<TOTAL) openPage(current+1); };
 const prev = ()=>{ if(current>1) openPage(current-1); };
@@ -1663,7 +1718,7 @@ audio.addEventListener("error", ()=>{
 const ayPick = $("ayPick");
 function closePick(){ ayPick.classList.add("hidden"); $("pickBtn").setAttribute("aria-expanded","false"); }
 function openPick(){
-  const ay = pageAyahs(current); if(!ay.length) return;
+  const ay = pageAyahs(current); if(!ay.length) return; closeBmPick();
   const multi = new Set(ay.map(x=>x[0])).size > 1; let html = "", lastS = 0;
   ay.forEach(([s,a])=>{
     if((multi || a===1) && s!==lastS) html += `<span class="sn">سورة ${SURAHS[s-1][0]}</span>`;
