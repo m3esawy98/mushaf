@@ -199,6 +199,10 @@
   .chip{display:flex;align-items:center;height:40px;padding:0 16px;border-radius:999px;background:var(--card);border:0;font-size:14px;cursor:pointer}
 
   /* ---------- Reader ---------- */
+  /* وإحنا في المصحف الصفحة اللي ورا مابتتحركش خالص (من غير كده الآيفون بيزق الشاشة كلها لفوق) */
+  html.reading, html.reading body{overflow:hidden;height:100%;overscroll-behavior:none}
+  /* شريط ثابت تحت ساعة الآيفون: الكلام بيعدّي تحته وهو بيتحرك بدل ما يبان ورا الساعة */
+  body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg);z-index:4;pointer-events:none}
   #reader{position:fixed;inset:0;background:#efe8da;display:flex;flex-direction:column;z-index:10}
   .bar{display:flex;align-items:center;gap:4px;padding:8px 8px;background:rgba(255,253,248,.97);
     border-bottom:1px solid var(--line);transition:transform .2s, opacity .2s;z-index:3}
@@ -1101,6 +1105,7 @@ function setBm(on){
 function show(p){
   current = p;
   appEl.classList.add("hidden"); navEl.classList.add("hidden"); reader.classList.remove("hidden");
+  document.documentElement.classList.add("reading"); if(scrollY) scrollTo(0,0);
   if(!plMeasured){ plMeasured = true; window.plMeasure(); }
   loading.classList.remove("hidden");
   loading.textContent = "جارٍ التحميل…";
@@ -1970,6 +1975,7 @@ function showView(name, sub){
   toast("");
   const fromReader = wasReader; wasReader = false; viewSeen = true; rdDepth = 0;
   reader.classList.add("hidden"); appEl.classList.remove("hidden"); navEl.classList.remove("hidden");
+  document.documentElement.classList.remove("reading");
   if(typeof audStop==="function" && aud) audStop();
   wakeOff();
   ["home","index","sec","bookmarks","sync","offline"].forEach(v=>$("v-"+v).classList.toggle("hidden", v!==name));
@@ -2113,3 +2119,10 @@ paintSync(); syncSoon(400);
 </script>
 </body>
 </html>
+
+/* الآيفون: بعد ما الكيبورد يتقفل ساعات الشاشة بتفضل مزقوقة لفوق. نرجّعها مكانها */
+document.addEventListener("focusout", e=>{
+  if(!/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+  setTimeout(()=>{ if(document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+    if(document.documentElement.classList.contains("reading")) scrollTo(0,0); else scrollTo(scrollX, scrollY); }, 80);
+});
