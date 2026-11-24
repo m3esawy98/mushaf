@@ -42,9 +42,9 @@
   /* iPadOS/iOS 26: تغبيش أعلى الشاشة في التطبيق المثبّت — ننزّل المحتوى تحته */
   @supports (-webkit-touch-callout:none){ @media (display-mode:standalone) and (min-width:700px){ :root{--edge:calc(env(safe-area-inset-top) + 36px)} } }
   .nav{position:fixed;bottom:0;left:0;right:0;z-index:5;background:var(--card);border-top:1px solid var(--line);
-    padding:6px 4px calc(10px + env(safe-area-inset-bottom))}
+    padding:4px 4px max(6px, calc(env(safe-area-inset-bottom) - 14px))}   /* مسافة أقل تحت الكلام (الشرطة السودة بتاعة الآيفون تقعد فوق جزء من الهامش) */
   .nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
-  .nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:52px;color:var(--muted);font-size:12px}
+  .nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:48px;color:var(--muted);font-size:12px}
   .nav a[aria-current="page"]{color:var(--accent);font-weight:600}
 
   .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
