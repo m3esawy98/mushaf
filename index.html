@@ -1903,8 +1903,12 @@ function localDoc(){
   if(lp && lt) d.last = { p: lp, t: lt };
   return d;
 }
+/* اللي جاي من السيرفر بيتدمج مع اللي على الجهاز دلوقتي (الأحدث يكسب)، مش بيمسحه:
+   لو عملت علامة والمزامنة شغالة، العلامة ماتضيعش */
+function mergeMap(local, remote){ const out = { ...(remote || {}) }; Object.entries(local || {}).forEach(([k,e])=>{ if(!out[k] || (e.t||0) >= (out[k].t||0)) out[k] = e; }); return out; }
 function applyDoc(doc){
   if(!doc || !doc.bm) return;
+  const loc = localDoc(); doc = { ...doc, bm: mergeMap(loc.bm, doc.bm), tdb: doc.tdb ? mergeMap(loc.tdb, doc.tdb) : doc.tdb };
   const keep = [], dels = {};
   Object.entries(doc.bm).forEach(([p,e])=>{ p = +p; if(e.d) dels[p] = e.t; else keep.push(e.a ? {p, t:e.t, a:e.a} : {p, t:e.t}); });
   keep.sort((a,b)=>b.t-a.t);
@@ -1933,7 +1937,10 @@ function refreshAfterSync(){
 async function syncNow(){
   const code = syncCode(); if(!SYNC_ON || !code || syncBusy) return;
   syncBusy = true;
-  try{ const j = await api({ code, doc: localDoc() }); applyDoc(j.doc); LS.set("mushaf:syncAt", Date.now()); syncErr = ""; }
+  const sent = JSON.stringify(localDoc());
+  try{ const j = await api({ code, doc: JSON.parse(sent) }); applyDoc(j.doc); LS.set("mushaf:syncAt", Date.now()); syncErr = "";
+    // حاجة اتغيرت وإحنا بنزامن: نبعتها هي كمان
+    if(JSON.stringify(localDoc().bm) !== JSON.stringify(JSON.parse(sent).bm) || JSON.stringify(localDoc().tdb) !== JSON.stringify(JSON.parse(sent).tdb)) setTimeout(()=>syncSoon(300), 0); }
   catch(e){ syncErr = e.message==="not_found" ? "الكود ده اتمسح من السيرفر" : navigator.onLine===false ? "مفيش نت — هتتزامن لما النت يرجع" : "المزامنة ما اشتغلتش — هنحاول تاني"; }
   syncBusy = false; refreshAfterSync();
 }
