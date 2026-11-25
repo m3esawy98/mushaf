@@ -311,7 +311,7 @@
   @media (hover:none){.navzone{display:none}}
   /* الموبايل بالعرض: الصفحة تاخد عرض الشاشة كله وتنزل فيها بالسحب، بدل ما تصغر عشان تدخل في الطول */
   @media (orientation:landscape) and (max-height:560px){
-    .stage{display:block;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y pinch-zoom}
+    .stage{display:block;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y pinch-zoom;overscroll-behavior:contain}
     .stage img{max-height:none;width:min(100%,1100px);margin:0 auto}
     /* الشاشة بالعرض قصيرة: الصفحة تاخد الشاشة كلها والشريطين يطيروا فوقها (بيختفوا بلمسة) بدل ما ياكلوا نصها */
     #reader{padding-top:0;padding-bottom:0}
@@ -1237,9 +1237,15 @@ stage.addEventListener("touchend", e=>{
    إلا جوه القوايم اللي بتتحرك، ووقت التكبير، وبصباعين (تكبير الشاشة) */
 const LANDSCAPE = matchMedia("(orientation:landscape) and (max-height:560px)");
 // لما تلف الموبايل بالعرض الزراير تستخبى على طول عشان الصفحة تبان كاملة (لمسة بترجّعها)
-LANDSCAPE.addEventListener && LANDSCAPE.addEventListener("change", ()=>{ stage.scrollTop = 0; reader.classList.toggle("immersive", LANDSCAPE.matches); });
+LANDSCAPE.addEventListener && LANDSCAPE.addEventListener("change", ()=>{ stage.scrollTop = 0; reader.classList.toggle("immersive", LANDSCAPE.matches); fixShift(); });
+/* الآيفون بعد اللف ساعات بيسيب الشاشة مزقوقة، فاللمس على الزراير يروح للصفحة اللي تحتها. نرجّعها مكانها */
+function fixShift(){ [0, 250, 600].forEach(ms=>setTimeout(()=>{ if(document.documentElement.classList.contains("reading") && (scrollY || scrollX || document.body.scrollTop)){ scrollTo(0,0); document.body.scrollTop = 0; } }, ms)); }
+addEventListener("orientationchange", fixShift); addEventListener("resize", fixShift);
+if(window.visualViewport) visualViewport.addEventListener("resize", fixShift);
 reader.addEventListener("touchmove", e=>{
-  if(e.touches.length !== 1 || reader.classList.contains("zoomed") || LANDSCAPE.matches) return;
+  if(e.touches.length !== 1) return;
+  // بالعرض أو وقت التكبير الصفحة نفسها بتتحرك جوه مكانها، بس السحب على الشريطين أو بره الصفحة ممنوع برضه
+  if((reader.classList.contains("zoomed") || LANDSCAPE.matches) && e.target.closest(".stage")) return;
   if(e.target.closest(".sheet,.ayahpick,.recmenu,.tfmenu,#tfList,.auddbg")) return;
   e.preventDefault();
 }, {passive:false});
