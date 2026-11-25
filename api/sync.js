@@ -85,6 +85,15 @@ function clean(doc){
   }
   if(doc && doc.last){ const p = parseInt(doc.last.p, 10), t = Number(doc.last.t);
     if(p >= 1 && p <= 608 && t > 0) out.last = { p, t: Math.floor(t) }; }
+  // علامة التفسير: واحدة بس
+  if(doc && doc.tfbm && Number(doc.tfbm.t) > 0){ const v = doc.tfbm, t = Math.floor(Number(v.t));
+    if(v.d) out.tfbm = { t, d: 1 };
+    else { const s = parseInt(v.s, 10), a = parseInt(v.a, 10), b = parseInt(v.b, 10) || a;
+      if(s >= 1 && s <= 114 && a >= 1 && a <= 286 && b >= a && b <= 286) out.tfbm = { s, a, b, t, tf: typeof v.tf === "string" ? v.tf.slice(0, 20) : "" }; } }
+  if(doc && doc.lsbm && Number(doc.lsbm.t) > 0){ const v = doc.lsbm, t = Math.floor(Number(v.t));
+    if(v.d) out.lsbm = { t, d: 1 };
+    else { const s = parseInt(v.s, 10), a = parseInt(v.a, 10);
+      if(s >= 1 && s <= 114 && a >= 1 && a <= 286) out.lsbm = { s, a, t }; } }
   return out;
 }
 function merge(a, b){
@@ -92,6 +101,12 @@ function merge(a, b){
   for(const [k, e] of Object.entries(b.tdb || {})) if(!out.tdb[k] || e.t > out.tdb[k].t) out.tdb[k] = e;
   for(const [p, e] of Object.entries(b.bm)) if(!out.bm[p] || e.t > out.bm[p].t) out.bm[p] = e;
   if(b.last && (!out.last || b.last.t > out.last.t)) out.last = b.last;
+  out.tfbm = a.tfbm;
+  if(b.tfbm && (!out.tfbm || b.tfbm.t > out.tfbm.t)) out.tfbm = b.tfbm;
+  if(!out.tfbm) delete out.tfbm;
+  out.lsbm = a.lsbm;
+  if(b.lsbm && (!out.lsbm || b.lsbm.t > out.lsbm.t)) out.lsbm = b.lsbm;
+  if(!out.lsbm) delete out.lsbm;
   return out;
 }
 
