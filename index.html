@@ -87,6 +87,15 @@
   .bcard.wide .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .bcard.wide .nm{font-size:20px}
   .bcard.wide .n{font-size:28px;line-height:1}
+  /* الأجزاء والأحزاب والأرباع والأثمان: صف واحد كروت صغيرة */
+  .grid2{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .bcard:not(.wide){display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px 8px}
+  .bcard:not(.wide) .row{display:contents}
+  .bcard:not(.wide) .ic{width:32px;height:32px;border-radius:10px;margin-bottom:2px}
+  .bcard:not(.wide) .ic svg{width:18px;height:18px}
+  .bcard:not(.wide) .nm{display:none}
+  .bcard:not(.wide) .n{font-size:20px;align-self:center}
+  .bcard:not(.wide) .u{font-size:12px;margin-top:0;align-self:center}
   .chev{flex:none;color:#8a8070}
   /* bookmarks row */
   .bmrow{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin:0 -20px;padding-inline:20px}
@@ -100,8 +109,9 @@
   .bmone .chev{flex:none;color:var(--muted);margin-inline-start:auto}
   /* علامة القراءة وعلامة التفسير جنب بعض */
   .bmpair.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:stretch}
-  .bmpair.two .bmrow{margin:0;padding:0;overflow:visible}
-  .bmpair.two #tfbmHome .tfbm{margin:0;height:100%}
+  .bmpair{margin-top:8px}
+  .bmpair:empty,.bmpair.none{display:none}
+  .bmpair:not(.two){display:block}
   .bmhalf{flex:1;display:flex;flex-direction:column;align-items:stretch;gap:6px;width:100%;height:100%;background:var(--card);border-radius:16px;border:0;padding:10px 12px;text-align:right;font:inherit;color:inherit;cursor:pointer;min-width:0}
   .bmhalf .hd{display:flex;align-items:center;justify-content:space-between;gap:6px}
   .bmhalf .tag{font-size:12px;color:var(--muted)}
@@ -273,6 +283,9 @@
   /* قائمة العلامة: بتنزل من تحت الشريط اللي فوق، لأن زرار 🔖 فوق */
   .ayahpick.bmpick{top:var(--bth,64px);bottom:auto;border-top:0;border-bottom:1px solid var(--line);border-radius:0 0 18px 18px;box-shadow:0 10px 24px rgba(0,0,0,.10)}
   .bmacts{display:flex;gap:6px}
+  .bmmode{display:flex;width:max-content;margin:0 auto 8px;padding:3px;gap:2px;background:#f3ece1;border-radius:999px}
+  .bmmode button{height:30px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+  .bmmode button[aria-pressed="true"]{background:var(--accent);color:#fff}
   .ayahpick .aph button.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
   .ayahpick .ayahs button.sug{border-color:var(--accent);color:var(--accent)}
   #bmBtn[aria-expanded="true"]{background:var(--accent-soft)}
@@ -491,7 +504,7 @@
     </div>
 
     <div class="sec"><h2>علاماتك</h2><a href="#bookmarks" id="bmAll">عرض الكل</a></div>
-    <div class="bmpair" id="bmPair"><div class="bmrow" id="bmRow"></div><div id="tfbmHome"></div></div>
+    <div class="bmrow" id="bmRow"></div><div class="bmpair" id="bmPair"><div id="tfbmHome"></div><div id="lsbmHome"></div></div>
     <div class="hint hidden" id="bmHint"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></span><span>وانت بتقرا، دوس زرار العلامة اللي فوق عشان تحفظ الصفحة وترجعلها من هنا.</span></div>
   </section>
 
@@ -543,6 +556,7 @@
     </nav>
     <div id="paneBm">
     <div id="tfbmPage"></div>
+    <div id="lsbmPage"></div>
     <p class="lead">احفظ أي صفحة من زرار العلامة وانت بتقرا.</p>
     <div class="bmlist" id="bmList"></div>
     <div class="emptybox hidden" id="bmEmpty">
@@ -671,6 +685,7 @@
     <table><thead><tr><th>الآية</th><th>سكتة</th><th>تحميل</th><th>صمت أول</th><th>صمت آخر</th></tr></thead><tbody id="dbgRows"></tbody></table>
   </div>
   <div class="ayahpick bmpick hidden" id="bmPick" role="dialog" aria-label="العلامة: وقفت عند أنهي آية">
+    <div class="bmmode" role="group" aria-label="نوع العلامة"><button type="button" data-mode="read">القراءة</button><button type="button" data-mode="listen">السماع</button></div>
     <div class="aph"><b>وقفت عند آية…</b><span class="bmacts"><button type="button" id="bmPageOnly">الصفحة بس</button><button type="button" id="bmRemove" class="ghost">شيل العلامة</button></span></div>
     <div class="ayahs" id="bmGrid"></div>
   </div>
@@ -938,10 +953,31 @@ function tfbmCard(half){
     <span class="txt"><small>علامة التفسير · ${(TAFASIR[x.tf] || TAFASIR[tfId]).name}</small><b>${tfbmRef(x)}</b>${x.t ? `<em>${when(x.t)}</em>` : ""}</span>
     <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>`;
 }
+/* ---------- علامة السماع: واحدة بس، لو بتسمع من برة التطبيق وعايز تفتكر وقفت فين ---------- */
+const lsbm = {
+  get(){ const x = LS.get("mushaf:lsbm", null); return x && !x.d && x.s ? x : null; },
+  raw(){ return LS.get("mushaf:lsbm", null); },
+  set(s, a){ LS.set("mushaf:lsbm", {s, a, t:Date.now()}); syncSoon(); },
+  clear(){ LS.set("mushaf:lsbm", {t:Date.now(), d:1}); syncSoon(); }
+};
+const LSBM_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f5f4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>`;
+function lsbmCard(){
+  const x = lsbm.get(); if(!x) return "";
+  const m = pageMeta(pageOfId(idOf(x.s, x.a)));
+  return `<button type="button" class="bmhalf press" data-lsbm="1"><span class="hd"><span class="tag">السماع</span><span class="ic" style="background:#e3eee8">${LSBM_ICON}</span></span>
+    <span class="txt"><b>${SURAHS[x.s-1][0]}، آية ${ar(x.a)}</b><small>${m.m1}</small><small>الحزب ${ar(m.hizb)} · الربع ${ar(m.rub+1)}</small>${x.t ? `<em>${when(x.t)}</em>` : ""}</span></button>`;
+}
+function openLsbm(){
+  const x = lsbm.get(); if(!x) return;
+  openPage(pageOfId(idOf(x.s, x.a)));
+  setTimeout(()=>toast(`${LSBM_ICON} وقفت في السماع عند ${SURAHS[x.s-1][0]}، آية ${ar(x.a)}`, 2500), 350);
+}
+["lsbmHome","lsbmPage"].forEach(k=>{ const el = $(k); if(el) el.addEventListener("click", e=>{ if(e.target.closest("[data-lsbm]")) openLsbm(); }); });
 function paintTfbmCards(){
-  const two = !!tfbm.get() && bm.all().length > 0;
-  $("bmPair").classList.toggle("two", two);
-  $("tfbmHome").innerHTML = tfbmCard(two); $("tfbmPage").innerHTML = tfbmCard();
+  const t = tfbm.get(), l = lsbm.get();
+  $("bmPair").classList.toggle("two", !!(t && l)); $("bmPair").classList.toggle("none", !t && !l);
+  $("tfbmHome").innerHTML = tfbmCard(true); $("lsbmHome").innerHTML = lsbmCard();
+  $("tfbmPage").innerHTML = tfbmCard(); $("lsbmPage").innerHTML = l ? lsbmCard().replace('class="bmhalf press"', 'class="bmhalf press" style="margin-bottom:12px"') : "";
 }
 var tfGoto = null;   // آية عايزين التفسير يفتح عليها بعد ما الصفحة تتفتح
 function openTfbm(){
@@ -967,10 +1003,7 @@ function renderHome(){
   }
   $("contBtn").onclick = ()=>openPage(last||1);
   const all = bm.all().slice().sort((x,y)=>(y.t||0)-(x.t||0)), list = all.slice(0, 1);
-  const half = !!tfbm.get() && list.length > 0;
   $("bmRow").innerHTML = list.map(x=>{ const {p, t} = x, m = pageMeta(p);
-    if(half) return `<button class="bmhalf rd press" data-page="${p}"${x.a ? ` data-bma="${x.a}"` : ""}><span class="hd"><span class="tag">القراءة</span><img class="thumb" data-thumb="${p}" alt=""></span>
-      <span class="txt"><b>${bmTitle(x, m)}</b><small>${m.m1}</small>${p<=QURAN_PAGES ? `<small>الحزب ${ar(m.hizb)} · الربع ${ar(m.rub+1)}</small>` : ""}${t ? `<em>${when(t)}</em>` : ""}</span></button>`;
     return `<button class="bmone press" data-page="${p}"${x.a ? ` data-bma="${x.a}"` : ""}><img class="thumb" data-thumb="${p}" alt="">
       <span class="txt"><b>${bmTitle(x, m)}</b><small>${m.m1}</small>${p<=QURAN_PAGES ? `<small>الحزب ${ar(m.hizb)} · الربع ${ar(m.rub+1)}</small>` : ""}${t ? `<em>${when(t)}</em>` : ""}</span>
       <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>`; }).join("");
@@ -1227,8 +1260,14 @@ function show(p){
 const bmPick = $("bmPick");
 const BM_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="#d6b468" stroke="#d6b468" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>`;
 function closeBmPick(){ bmPick.classList.add("hidden"); bmBtn.setAttribute("aria-expanded","false"); }
+var bmMode = LS.get("mushaf:bmMode", "read");
+function paintBmMode(){ bmPick.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.mode===bmMode))); }
+bmPick.querySelector(".bmmode").addEventListener("click", e=>{ const b = e.target.closest("[data-mode]"); if(!b) return; e.stopPropagation(); bmMode = b.dataset.mode; LS.set("mushaf:bmMode", bmMode); openBmPick(); });
 function openBmPick(){
-  const ay = pageAyahs(current), cur = bm.get(current);
+  paintBmMode();
+  const ay = pageAyahs(current);
+  let cur = bm.get(current);
+  if(bmMode==="listen"){ const l = lsbm.get(); const i = l ? ay.findIndex(([s,a])=>s===l.s && a===l.a) : -1; cur = i>=0 ? {a:i+1} : null; }
   // اقتراح: الآية اللي بتتقري دلوقتي لو في الصفحة دي
   let sug = 0; if(aud && !aud.bism){ const i = ay.findIndex(([s,a])=>idOf(s,a)===aud.id); if(i>=0) sug = i+1; }
   const multi = new Set(ay.map(x=>x[0])).size > 1; let html = "", lastS = 0;
@@ -1240,6 +1279,7 @@ function openBmPick(){
   });
   $("bmGrid").innerHTML = html;
   $("bmRemove").classList.toggle("hidden", !cur);
+  $("bmPageOnly").classList.toggle("hidden", bmMode==="listen");
   $("bmPageOnly").classList.toggle("now", !!cur && !cur.a);
   closePick();
   bmPick.classList.remove("hidden"); bmBtn.setAttribute("aria-expanded","true");
@@ -1250,9 +1290,14 @@ function bmSaved(a){
   toast(`${BM_ICON} ${sa ? `اتحفظت العلامة عند ${SURAHS[sa[0]-1][0]}، آية ${ar(sa[1])}` : `اتحفظت العلامة على صفحة ${ar(current)}`} <a href="#bookmarks">عرض</a>`);
 }
 bmBtn.onclick = e=>{ e.stopPropagation(); if(bmPick.classList.contains("hidden")) openBmPick(); else closeBmPick(); };
-$("bmGrid").addEventListener("click", e=>{ const b = e.target.closest("button[data-pos]"); if(!b) return; const a = +b.dataset.pos; bm.set(current, a); bmSaved(a); });
+$("bmGrid").addEventListener("click", e=>{ const b = e.target.closest("button[data-pos]"); if(!b) return; const a = +b.dataset.pos;
+  if(bmMode==="listen"){ const sa = pageAyahs(current)[a-1]; lsbm.set(sa[0], sa[1]); closeBmPick(); paintTfbmCards();
+    toast(`${LSBM_ICON} اتحفظت علامة السماع عند ${SURAHS[sa[0]-1][0]}، آية ${ar(sa[1])}`); return; }
+  bm.set(current, a); bmSaved(a); });
 $("bmPageOnly").onclick = ()=>{ bm.set(current, null); bmSaved(null); };
-$("bmRemove").onclick = ()=>{ bm.remove(current); setBm(false); closeBmPick(); toast("اتشالت العلامة"); };
+$("bmRemove").onclick = ()=>{
+  if(bmMode==="listen"){ lsbm.clear(); closeBmPick(); paintTfbmCards(); toast("اتشالت علامة السماع"); return; }
+  bm.remove(current); setBm(false); closeBmPick(); toast("اتشالت العلامة"); };
 document.addEventListener("click", e=>{ if(!e.target.closest("#bmPick,#bmBtn")) closeBmPick(); });
 
 /* فتح علامة واقفة عند آية: شريط «وقفت عند آية …» وزرار يكمّل التلاوة منها */
@@ -2004,6 +2049,7 @@ function localDoc(){
   const lp = store.get(), lt = LS.get("mushaf:lastAt", 0);
   if(lp && lt) d.last = { p: lp, t: lt };
   const tb = tfbm.raw(); if(tb && tb.t) d.tfbm = tb;
+  const lb = lsbm.raw(); if(lb && lb.t) d.lsbm = lb;
   return d;
 }
 /* اللي جاي من السيرفر بيتدمج مع اللي على الجهاز دلوقتي (الأحدث يكسب)، مش بيمسحه:
@@ -2021,6 +2067,7 @@ function applyDoc(doc){
     Object.entries(doc.tdb).forEach(([id,e])=>{ if(e.d) td[id] = e.t; else tk.push({id, s:e.s, a:e.a, b:e.b, note:e.n||"", g:e.g||[], t:e.t}); });
     tk.sort((x,y)=>y.t-x.t); LS.set("mushaf:tdb", tk); LS.set("mushaf:tdbdel", td);
   }
+  if(doc.lsbm && doc.lsbm.t){ const cur = lsbm.raw(); if(!cur || !cur.t || doc.lsbm.t > cur.t) LS.set("mushaf:lsbm", doc.lsbm); }
   if(doc.tfbm && doc.tfbm.t){ const cur = tfbm.raw(); if(!cur || !cur.t || doc.tfbm.t > cur.t) LS.set("mushaf:tfbm", doc.tfbm); }
   if(doc.last && doc.last.t > LS.get("mushaf:lastAt", 0)){ LS.set("mushaf:last", doc.last.p); LS.set("mushaf:lastAt", doc.last.t); }
 }
