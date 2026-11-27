@@ -483,6 +483,10 @@
   .sbhead{font-size:var(--tfs);line-height:1.9;margin:0}
   .sbhead .qq,.sbtx .qq{font-family:"Amiri Quran",serif;color:var(--accent)}
   .sbnote{font-size:12px;color:#7a5a17;background:#f7efdc;border-radius:10px;padding:5px 10px;margin:0}
+  /* من البحث: الآية تتلون وتختفي لوحدها */
+  @keyframes ayhit{0%{opacity:0}10%{opacity:1}72%{opacity:1}100%{opacity:0}}
+  .ayhl i.hit{background:rgba(255,193,7,.42);animation:ayhit 4.5s ease forwards}
+  @media (prefers-reduced-motion:reduce){.ayhl i.hit{animation:none}}
 </style>
 </head>
 <body>
@@ -1279,7 +1283,7 @@ function setBm(on){
 }
 function show(p){
   if(typeof closeAy==="function" && aySel) closeAy();
-  current = p; if(typeof ayPaint==="function"){ ayHl.innerHTML = ""; ayPlayKey = ""; }
+  current = p; if(typeof ayPaint==="function"){ ayHl.innerHTML = ""; ayPlayKey = ""; clearTimeout(ayHitT); ayHitI = -1; }
   appEl.classList.add("hidden"); navEl.classList.add("hidden"); reader.classList.remove("hidden");
   document.documentElement.classList.add("reading"); if(scrollY) scrollTo(0,0);
   if(!plMeasured){ plMeasured = true; window.plMeasure(); }
@@ -1441,11 +1445,20 @@ function ayPlace(){
 }
 function ayPaint(){
   let html = "";
-  const sg = (aySel || ayPlayI>=0) ? aySegs(current) : null;
+  const sg = (aySel || ayPlayI>=0 || ayHitI>=0) ? aySegs(current) : null;
   const add = (i, cls)=>{ if(sg && sg[i]) sg[i].forEach(([x1,y1,x2,y2])=>{ html += `<i class="${cls}" style="left:${(x1/IMW*100).toFixed(2)}%;top:${(y1/IMH*100).toFixed(2)}%;width:${((x2-x1)/IMW*100).toFixed(2)}%;height:${((y2-y1)/IMH*100).toFixed(2)}%"></i>`; }); };
   if(ayPlayI>=0 && !(aySel && aySel.idx-1===ayPlayI)) add(ayPlayI, "play");
+  if(ayHitI>=0 && !(aySel && aySel.idx-1===ayHitI)) add(ayHitI, "hit");
   if(aySel) add(aySel.idx-1, "on");
   ayHl.innerHTML = html; if(html) ayPlace();
+}
+/* من البحث: الآية اللي فيها الكلمة تتلون لحظات وتختفي لوحدها */
+var ayHitI = -1, ayHitT = 0;
+function ayFlash(id){
+  const [s, a] = saOf(id), i = pageAyahs(current).findIndex(x=>x[0]===s && x[1]===a);
+  clearTimeout(ayHitT); ayHitI = i; ayPaint(); if(i<0) return;
+  if(reader.classList.contains("zoomed")){ const el = ayHl.querySelector("i.hit"); if(el) setTimeout(()=>el.scrollIntoView({block:"center", behavior:"smooth"}), 60); }
+  ayHitT = setTimeout(()=>{ ayHitI = -1; ayPaint(); }, 4600);
 }
 function closeAy(){ if(!aySel) return; aySel = null; aySheet.classList.add("hidden"); ayPaint(); }
 function openAy(i){
@@ -1602,7 +1615,8 @@ ayRes.addEventListener("click", e=>{
   if(m){ const v = m.dataset.exact==="1"; if(v!==ayExact){ ayExact = v; LS.set("mushaf:srchExact", v); ayQ = ""; renderAyRes(); } return; }
   const b = e.target.closest("[data-ayid]"); if(!b) return;
   const [s, a] = saOf(+b.dataset.ayid);
-  setTimeout(()=>toast(`${SURAHS[s-1][0]}، آية ${ar(a)} في الصفحة دي`, 3500), 350);
+  const id = +b.dataset.ayid;
+  setTimeout(()=>{ toast(`${SURAHS[s-1][0]}، آية ${ar(a)} في الصفحة دي`, 3500); ayFlash(id); }, 350);
 });
 
 renderAyRes();
