@@ -1,5 +1,5 @@
 // Service worker: يخلي التطبيق يفتح بدون إنترنت ويحفظ صفحات المصحف على الجهاز
-const SHELL = "mushaf-shell-v58";
+const SHELL = "mushaf-shell-v59";
 const PAGES = "mushaf-pages-v2";   // غيّر الرقم لو صور الصفحات اتغيرت
 const FONTS = "mushaf-fonts-v1";
 const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./favicon.png", "./qrcode.js", "./quran-text.json"];
